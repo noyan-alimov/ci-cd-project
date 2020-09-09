@@ -2,7 +2,19 @@ version: 2.1
 
 ### It's a good practice to keep your commands at the top of the config file. In this project, you'll need at least 2 commands:
 
-# commands:
+commands:
+  install-dependencies:
+    parameters:
+      layer:
+        type: string
+    steps:
+      - run: 
+          name: Install << parameters.layer >> dependencies
+          command: |
+            cd << parameters.layer >>
+            npm i
+      # - slack/notify-on-failure
+
 #   destroy-environment:
 #     description: Destroy backend and frontend cloudformation stacks given a workflow ID.
 #     ...
@@ -12,19 +24,33 @@ version: 2.1
 #     ...
 
 jobs:
-  hello-world: # Delete this job when you get started
+  build-frontend:
     docker:
-      - image: amazon/aws-cli
+      - image: circleci/node
     steps:
       - checkout
+      - install-dependencies:
+          layer: "frontend"
       - run:
-          name: Say Hello
+          name: Build Frontend
           command: |
-            echo "Hello World"
+            cd frontend
+            npm run build
+      # - slack/notify-on-failure
 
-#  build-frontend:
-
-#  build-frontend:
+  build-backend:
+    docker:
+      - image: circleci/node
+    steps:
+      - checkout
+      - install-dependencies:
+          layer: "backend"
+      - run:
+          name: Build backend
+          command: |
+            cd backend
+            npm run build
+      # - slack/notify-on-failure
 
 #  test-frontend:
 
