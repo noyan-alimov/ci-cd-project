@@ -63,7 +63,12 @@ jobs:
           name: Unit test frontend
           command: |
             cd frontend
+            mkdir -p ./reports/junit/
             npm run test
+          environment:
+            JEST_JUNIT_OUTPUT_DIR: "./reports/junit/"
+      - store_test_results:
+          path: ./frontend/reports/junit/
       # - slack/notify-on-failure
 
   test-backend:
