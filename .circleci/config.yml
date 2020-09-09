@@ -52,9 +52,43 @@ jobs:
             npm run build
       # - slack/notify-on-failure
 
-#  test-frontend:
+ test-frontend:
+  docker:
+    - image: circleci/node
+  steps:
+    - checkout
+    - install-dependencies:
+        layer: "frontend"
+    - run:
+        name: Unit test frontend
+        command: |
+          cd frontend
+          mkdir -p ./reports/junit/
+          npm run test:report
+        environment:
+          JEST_JUNIT_OUTPUT_DIR: "./reports/junit/"
+    - store_test_results:
+        path: ./frontend/reports/junit/
+    # - slack/notify-on-failure
 
-#  est-backend:
+ test-backend:
+  docker:
+    - image: circleci/node
+  steps:
+    - checkout
+    - install-dependencies:
+        layer: "backend"
+    - run:
+        name: Unit test backend
+        command: |
+          cd backend
+          mkdir -p ./reports/junit/
+          npm run test:report
+        environment:
+          JEST_JUNIT_OUTPUT_DIR: "./reports/junit/"
+    - store_test_results:
+        path: ./backend/reports/junit/
+    # - slack/notify-on-failure
 
 #  can-frontend:
 
@@ -79,3 +113,5 @@ workflows:
     jobs:
       - build-frontend
       - build-backend
+      - test-frontend
+      - test-backend
