@@ -64,7 +64,8 @@ jobs:
           command: |
             cd frontend
             mkdir -p ./reports/junit/
-            npm run test
+            npm install --save-dev jest-junit jest-junit-reporter
+            jest --ci --runInBand --reporters=default --reporters=jest-junit
           environment:
             JEST_JUNIT_OUTPUT_DIR: "./reports/junit/"
       - store_test_results:
@@ -83,9 +84,8 @@ jobs:
           command: |
             cd backend
             mkdir -p ./reports/junit/
-            npm run test
-            npm run test:e2e
-            npm run test:cov
+            npm install --save-dev jest-junit jest-junit-reporter
+            jest --ci --runInBand --reporters=default --reporters=jest-junit
           environment:
             JEST_JUNIT_OUTPUT_DIR: "./reports/junit/"
       - store_test_results:
@@ -113,7 +113,7 @@ jobs:
 workflows:
   default:
     jobs:
-      - build-frontend
-      - build-backend
+      # - build-frontend
+      # - build-backend
       - test-frontend
       - test-backend
