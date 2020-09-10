@@ -13,7 +13,7 @@ commands:
           command: |
             cd << parameters.layer >>
             npm i
-      # - slack/notify-on-failure
+      - slack/notify-on-failure
 
 #   destroy-environment:
 #     description: Destroy backend and frontend cloudformation stacks given a workflow ID.
@@ -22,6 +22,10 @@ commands:
 #   revert-migration:
 #     description: Revert the last migration if successfully run in the current workflow.
 #     ...
+
+orbs:
+  slack: circleci/slack@3.4.2
+
 
 jobs:
   build-frontend:
@@ -36,7 +40,7 @@ jobs:
           command: |
             cd frontend
             npm run build
-      # - slack/notify-on-failure
+      - slack/notify-on-failure
 
   build-backend:
     docker:
@@ -50,7 +54,7 @@ jobs:
           command: |
             cd backend
             npm run build
-      # - slack/notify-on-failure
+      - slack/notify-on-failure
 
   test-frontend:
     docker:
@@ -70,7 +74,7 @@ jobs:
             JEST_JUNIT_OUTPUT_DIR: "./reports/junit/"
       - store_test_results:
           path: ./frontend/reports/junit/
-      # - slack/notify-on-failure
+      - slack/notify-on-failure
 
   test-backend:
     docker:
@@ -90,7 +94,7 @@ jobs:
             JEST_JUNIT_OUTPUT_DIR: "./reports/junit/"
       - store_test_results:
           path: ./backend/reports/junit/
-      # - slack/notify-on-failure
+      - slack/notify-on-failure
   
   scan-frontend:
     docker:
@@ -104,6 +108,7 @@ jobs:
           command: |
             cd frontend
             npm audit fix --audit-level=critical --force
+      - slack/notify-on-failure
 
   scan-backend:
     docker:
@@ -116,7 +121,8 @@ jobs:
           name: Analyze backend
           command: |
             cd backend
-            npm audit fix --audit-level=critical --force
+            npm audit --audit-level=critical
+      - slack/notify-on-failure
 
 
 #  deploy-infrastructure:
@@ -140,5 +146,5 @@ workflows:
       # - build-backend
       # - test-frontend
       # - test-backend
-      - scan-frontend
+      # - scan-frontend
       - scan-backend
