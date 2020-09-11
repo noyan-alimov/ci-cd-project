@@ -125,14 +125,15 @@ jobs:
       - slack/notify-on-failure
 
   create-infrastructure-backend:
-    docker:
-      - image: amazon/aws-cli
+    executor: aws-cli/default
     steps:
       - checkout
+      - aws-cli/setup:
+          profile-name: default
       - run:
           name: Create backend infrastructure
           command: |
-            cd ./circleci/files
+            cd .circleci/files
             aws cloudformation deploy \
               --template-file backend.yml
               --stack-name "backend-${CIRCLE_WORKFLOW_ID:0:7}" \
@@ -156,10 +157,11 @@ jobs:
           when: on_fail
 
   create-infrastructure-frontend:
-    docker:
-      - image: amazon/aws-cli
+    executor: aws-cli/default
     steps:
       - checkout
+      - aws-cli/setup:
+          profile-name: default
       - run: mkdir /tmp/workspace
       - run:
           name: Save old bucket arn
@@ -171,7 +173,7 @@ jobs:
       - run:
           name: Create frontend infrastructure
           command: |
-            cd ./circleci/files
+            cd .circleci/files
             aws cloudformation deploy --template-file frontend.yml \
               --stack-name "frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID="frontend-deployment-${CIRCLE_WORKFLOW_ID:0:7}" \
