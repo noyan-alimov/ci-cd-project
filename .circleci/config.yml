@@ -185,7 +185,7 @@ jobs:
             aws cloudformation describe-stack-events --stack-name "frontend-${CIRCLE_WORKFLOW_ID:0:7}"
           when: on_fail
           
-  configure-infrastructure-backend:
+  configure-infrastructure-and-deploy-backend:
     docker:
       - image: alpine:latest
     steps:
@@ -210,12 +210,54 @@ jobs:
           command: |
             cd ./circleci/ansible
             ansible-playbook -i inventory.txt playbook.yml
+            
+  run-migrations:
+    docker:
+      - image: cimg/node:lts
+    steps:
+      - checkout
+      - install-dependencies:
+          layer: "backend"
+      - run:
+          name: Migrate db
+          command: |
+            mkdir /tmp/workspace
+            cd backend
+            npm run migrations | tee /tmp/workspace/db-migration-log.txt
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - db-migrations-log.txt
+      - slack/notify-on-failure
 
-#  run-migrations:
+  prepare-frontend:
+    docker:
+      - image: cimg/node:lts
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - checkout
+      - install-dependencies:
+          layer: "frontend"
+      - run:
+          name: Build Frontend
+          command: |
+            export API_URL=http://`cat /tmp/workspace/backend_url.txt`:3030
+            cd frontend            
+            npm run build
+      - slack/notify-on-failure
+    
+  deploy-frontend:
+    executor: aws-cli/default
+    steps:
+      - aws-cli/setup:
+          profile-name: default
+      - run:
+          name: deploy to s3 bucket
+          command: |
+            cd frontend/dist
+            aws s3 sync . s3://udapeople-frontend-deployment-${CIRCLE_WORKFLOW_ID:0:7}
 
-#  deploy-frontend:
-
-#  deploy-backend:  
 
 #  smoke-test:
 
@@ -246,7 +288,18 @@ workflows:
             - test-backend
             - scan-frontend
             - scan-backend
-      - configure-infrastructure-backend:
+      - configure-infrastructure-and-deploy-backend:
           requires:
             - create-infrastructure-backend
             - create-infrastructure-frontend
+            - build-backend
+      - prepare-frontend:
+          requires:
+            - create-infrastructure-frontend
+            - create-infrastructure-backend
+            - configure-infrastructure-and-deploy-backend
+      - deploy-frontend:
+          requires:
+            - create-infrastructure-frontend
+            - create-infrastructure-backend
+            - configure-infrastructure-and-deploy-backend
