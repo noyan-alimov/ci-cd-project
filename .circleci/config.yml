@@ -122,8 +122,7 @@ jobs:
           name: Analyze backend
           command: |
             cd backend
-            # already ran this command: npm audit fix --audit-level=critical --force
-            npm audit --audit-level=critical
+            npm audit fix --audit-level=critical --force
       - slack/notify-on-failure
 
   create-infrastructure-backend:
