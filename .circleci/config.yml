@@ -121,11 +121,66 @@ jobs:
           name: Analyze backend
           command: |
             cd backend
-            npm audit --audit-level=critical
+            npm audit fix --audit-level=critical --force
       - slack/notify-on-failure
 
+  create-infrastructure-backend:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Create backend infrastructure
+          command: |
+            cd ./circleci/files
+            aws cloudformation deploy \
+              --template-file backend.yml
+              --stack-name "backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID="backend-deployment-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --tags project=udacity
+      - run:
+          name: Save backend instance public url
+          command: |
+            mkdir /tmp/workspace
+            aws ec2 describe-instances --filters "Name=tag:project,Values=udacity" \
+              --query "Reservations[*].Instances[*].[PublicDnsName]" \
+              --output text > /tmp/workspace/backend_url.txt
+      - persist-to-workspace:
+          root: /tmp/workspace
+          paths:
+            - backend_url.txt
+      - run:
+          name: describe events on failure
+          command: |
+            aws cloudformation describe-stack-events --stack-name "backend-${CIRCLE_WORKFLOW_ID:0:7}"
+          when: on_fail
 
-#  deploy-infrastructure:
+  create-infrastructure-frontend:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run: mkdir /tmp/workspace
+      - run:
+          name: Save old bucket arn
+          command: echo "arn:aws:s3:::`aws s3 ls | awk '{ print $3 } ' | grep udapeople-frontend-deployment`" > /tmp/workspace/old_s3arn.txt
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - old_s3arn.txt
+      - run:
+          name: Create frontend infrastructure
+          command: |
+            cd ./circleci/files
+            aws cloudformation deploy --template-file frontend.yml \
+              --stack-name "frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID="frontend-deployment-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --tags project=udacity
+      - run:
+          name: describe events on failure
+          command: |
+            aws cloudformation describe-stack-events --stack-name "frontend-${CIRCLE_WORKFLOW_ID:0:7}"
+          when: on_fail
 
 #  configure-infrastructure:
 
@@ -147,4 +202,6 @@ workflows:
       # - test-frontend
       # - test-backend
       # - scan-frontend
-      - scan-backend
+      # - scan-backend
+      - create-infrastructure-backend
+      - create-infrastructure-frontend
