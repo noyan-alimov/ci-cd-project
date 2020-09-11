@@ -208,7 +208,7 @@ jobs:
       - run:
           name: Run ansible playbook
           command: |
-            cd ./circleci/ansible
+            cd .circleci/ansible
             ansible-playbook -i inventory.txt playbook.yml
             
   run-migrations:
@@ -292,7 +292,6 @@ workflows:
           requires:
             - create-infrastructure-backend
             - create-infrastructure-frontend
-            - build-backend
       - run-migrations:
           requires:
             - configure-infrastructure-and-deploy-backend
@@ -301,4 +300,4 @@ workflows:
             - run-migrations
       - deploy-frontend:
           requires:
-            - run-migrations
+            - prepare-frontend
