@@ -34,6 +34,8 @@
       file:
         path: /home/ubuntu/web
         state: directory
+      vars:
+        - ansible_host_key_checking: false
     
     - name: "copy backend build"
       become: yes
