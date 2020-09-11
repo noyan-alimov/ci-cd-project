@@ -122,7 +122,8 @@ jobs:
           name: Analyze backend
           command: |
             cd backend
-            npm audit fix --audit-level=critical --force
+            # already ran this command: npm audit fix --audit-level=critical --force
+            npm audit --audit-level=critical
       - slack/notify-on-failure
 
   create-infrastructure-backend:
@@ -293,13 +294,12 @@ workflows:
             - create-infrastructure-backend
             - create-infrastructure-frontend
             - build-backend
+      - run-migrations:
+          requires:
+            - configure-infrastructure-and-deploy-backend
       - prepare-frontend:
           requires:
-            - create-infrastructure-frontend
-            - create-infrastructure-backend
-            - configure-infrastructure-and-deploy-backend
+            - run-migrations
       - deploy-frontend:
           requires:
-            - create-infrastructure-frontend
-            - create-infrastructure-backend
-            - configure-infrastructure-and-deploy-backend
+            - run-migrations
