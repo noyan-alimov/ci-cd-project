@@ -145,7 +145,7 @@ jobs:
             aws ec2 describe-instances --filters "Name=tag:project,Values=udacity" \
               --query "Reservations[*].Instances[*].[PublicDnsName]" \
               --output text > /tmp/workspace/backend_url.txt
-      - persist-to-workspace:
+      - persist_to_workspace:
           root: /tmp/workspace
           paths:
             - backend_url.txt
@@ -181,8 +181,32 @@ jobs:
           command: |
             aws cloudformation describe-stack-events --stack-name "frontend-${CIRCLE_WORKFLOW_ID:0:7}"
           when: on_fail
-
-#  configure-infrastructure:
+          
+  configure-infrastructure-backend:
+    docker:
+      - image: alpine:latest
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["37:17:a8:70:7e:f8:d1:af:e2:5c:8c:4d:5f:26:46:77"]
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Install ansible and playbook dependencies
+          command: |
+            apk add --update ansible
+            ansible-galaxy install weareinteractive.environment
+      - run:
+          name: Create ansible inventory
+          command: |
+            echo "[backend]" > ./circleci/ansible/inventory.txt
+            cat /tmp/workspace/backend_url.txt >> .circleci/ansible/inventory.txt
+            echo ./circleci/ansible/inventory.txt
+      - run:
+          name: Run ansible playbook
+          command: |
+            cd ./circleci/ansible
+            ansible-playbook -i inventory.txt playbook.yml
 
 #  run-migrations:
 
@@ -197,11 +221,29 @@ jobs:
 workflows:
   default:
     jobs:
-      # - build-frontend
-      # - build-backend
-      # - test-frontend
-      # - test-backend
-      # - scan-frontend
-      # - scan-backend
-      - create-infrastructure-backend
-      - create-infrastructure-frontend
+      - build-frontend
+      - build-backend
+      - test-frontend
+      - test-backend
+      - scan-frontend
+      - scan-backend
+      - create-infrastructure-backend:
+          requires:
+            - build-frontend
+            - build-backend
+            - test-frontend
+            - test-backend
+            - scan-frontend
+            - scan-backend
+      - create-infrastructure-frontend:
+          requires:
+            - build-frontend
+            - build-backend
+            - test-frontend
+            - test-backend
+            - scan-frontend
+            - scan-backend
+      - configure-infrastructure-backend:
+          requires:
+            - create-infrastructure-backend
+            - create-infrastructure-frontend
