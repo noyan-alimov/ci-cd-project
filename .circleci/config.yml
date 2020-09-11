@@ -202,9 +202,9 @@ jobs:
       - run:
           name: Create ansible inventory
           command: |
-            echo "[backend]" > ./circleci/ansible/inventory.txt
+            echo "[backend]" > .circleci/ansible/inventory.txt
             cat /tmp/workspace/backend_url.txt >> .circleci/ansible/inventory.txt
-            echo ./circleci/ansible/inventory.txt
+            echo .circleci/ansible/inventory.txt
       - run:
           name: Run ansible playbook
           command: |
