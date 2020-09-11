@@ -1,55 +1,67 @@
 ---
-    - name: update apt packages
-      become: yes
-      apt:
-        update_cache: yes
-    
-    - name: upgrade packages
-      become: yes
-      apt:
-        upgrade: yes
-    
-    - name: remove dependencies that are no longer required
-      become: yes
-      apt:
-        autoremove: yes
-    
-    - name: install dependencies
-      become: yes
-      apt:
-        name: ["nodejs", "npm"]
-        state: latest
-        update_cache: yes
-    
-    - name: install pm2
-      become: yes
-      npm:
-        name: pm2
-        global: yes
-        production: yes
-        state: present
+- name: update apt packages
+  become: yes
+  apt:
+    update_cache: yes
 
-    - name: "create web folder"
-      become: yes
-      file:
-        path: /home/ubuntu/web
-        state: directory
-    
-    - name: "copy backend build"
-      become: yes
-      unarchive:
-        src: /tmp/workspace/backend.tar.gz
-        dest: /home/ubuntu/web/
-        owner: ubuntu
+- name: upgrade packages
+  become: yes
+  apt:
+    upgrade: yes
 
-    - name: "configure pm2 start as service"
-      become: yes
-      shell: |
-        env PATH=$PATH:/usr/local/bin pm2 startup -u ubuntu
+- name: remove dependencies that are no longer required
+  become: yes
+  apt:
+    autoremove: yes
 
-    - name: "start backend with pm2"
-      become: yes
-      shell: |    
-        pm2 start main.js --name backend
-      args:
-        chdir: /home/ubuntu/web
+- name: install dependencies
+  become: yes
+  apt:
+    name: ["nodejs", "npm"]
+    state: latest
+    update_cache: yes
+
+- name: install pm2
+  become: yes
+  npm:
+    name: pm2
+    global: yes
+    production: yes
+    state: present
+
+- name: "create web folder"
+  become: yes
+  file:
+    path: /home/ubuntu/web
+    state: directory
+
+- name: "copy backend build"
+  become: yes
+  unarchive:
+    src: /tmp/workspace/backend.tar.gz
+    dest: /home/ubuntu/web/
+    owner: ubuntu
+
+- name: "copy backend package.json"
+  become: yes
+  copy:
+    src: /tmp/workspace/package.json
+    dest: /home/ubuntu/web/
+    owner: ubuntu
+
+- name: "install npm dependencies"
+  shell: |
+    cd /home/ubuntu/web
+    npm i
+
+- name: "configure pm2 start as service"
+  become: yes
+  shell: |
+    env PATH=$PATH:/usr/local/bin pm2 startup -u ubuntu
+
+- name: "start backend with pm2"
+  become: yes
+  shell: |    
+    pm2 start main.js --name backend
+  args:
+    chdir: /home/ubuntu/web
