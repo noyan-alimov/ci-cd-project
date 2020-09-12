@@ -278,38 +278,38 @@ jobs:
 workflows:
   default:
     jobs:
-      - build-frontend
-      - build-backend
-      - test-frontend
-      - test-backend
-      - scan-frontend
-      - scan-backend
-      - create-infrastructure-backend:
-          requires:
-            - build-frontend
-            - build-backend
-            - test-frontend
-            - test-backend
-            - scan-frontend
-            - scan-backend
-      - create-infrastructure-frontend:
-          requires:
-            - build-frontend
-            - build-backend
-            - test-frontend
-            - test-backend
-            - scan-frontend
-            - scan-backend
-      - configure-infrastructure-and-deploy-backend:
-          requires:
-            - create-infrastructure-backend
-            - create-infrastructure-frontend
-      - run-migrations:
-          requires:
-            - configure-infrastructure-and-deploy-backend
-      - prepare-frontend:
-          requires:
-            - run-migrations
-      - deploy-frontend:
-          requires:
-            - prepare-frontend
+      # - build-frontend
+      # - build-backend
+      # - test-frontend
+      # - test-backend
+      # - scan-frontend
+      # - scan-backend
+      # - create-infrastructure-backend:
+      #     requires:
+      #       - build-frontend
+      #       - build-backend
+      #       - test-frontend
+      #       - test-backend
+      #       - scan-frontend
+      #       - scan-backend
+      # - create-infrastructure-frontend:
+      #     requires:
+      #       - build-frontend
+      #       - build-backend
+      #       - test-frontend
+      #       - test-backend
+      #       - scan-frontend
+      #       - scan-backend
+      # - configure-infrastructure-and-deploy-backend:
+      #     requires:
+      #       - create-infrastructure-backend
+      #       - create-infrastructure-frontend
+      - run-migrations
+          # requires:
+          #   - configure-infrastructure-and-deploy-backend
+      # - prepare-frontend:
+      #     requires:
+      #       - run-migrations
+      # - deploy-frontend:
+      #     requires:
+      #       - prepare-frontend
