@@ -15,13 +15,20 @@ commands:
             npm i
       - slack/notify-on-failure
 
-#   destroy-environment:
-#     description: Destroy backend and frontend cloudformation stacks given a workflow ID.
-#     ...
-
-#   revert-migration:
-#     description: Revert the last migration if successfully run in the current workflow.
-#     ...
+  destroy-environment-and-revert-migrations:
+    steps:
+      - run:
+          name: Destroy backend environment
+          command: |
+            aws cloudformation delete-stack --stack-name backend-${CIRCLE_WORKFLOW_ID}
+      - run:
+          name: Destroy frontend environment
+          command: |
+            aws cloudformation delete-stack --stack-name frontend-${CIRCLE_WORKFLOW_ID}
+      - run:
+          name: Revert database migration if it has already ran
+          command: |
+            if curl -H "token: 64feb3bf-1926-4aec-90fc-ec721a0f8ad6" --request GET https://api.memstash.io/values/migrated | grep "true"; then npm run migrations:revert; else echo "no revert migration needed"; fi
 
 orbs:
   slack: circleci/slack@3.4.2
@@ -233,14 +240,19 @@ jobs:
       - run:
           name: Migrate db
           command: |
-            mkdir /tmp/workspace
             cd backend
-            npm run migrations | tee /tmp/workspace/db-migration-log.txt
-      - persist_to_workspace:
-          root: /tmp/workspace
-          paths:
-            - db-migrations-log.txt
+            npm run migrations
       - slack/notify-on-failure
+
+  take-note-migrations-ran:
+    docker:
+      - image: alpine:latest
+    steps:
+      - run: apk add curl
+      - run:
+          name: use memstash to store boolean true value that migrations ran
+          command: |
+            curl -H "Content-Type: text/plain" -H "token: 64feb3bf-1926-4aec-90fc-ec721a0f8ad6" --request PUT --data "true" https://api.memstash.io/values/migrated
 
   prepare-frontend:
     docker:
@@ -270,46 +282,76 @@ jobs:
             cd frontend/dist
             aws s3 sync . s3://udapeople-frontend-deployment-${CIRCLE_WORKFLOW_ID:0:7}
 
+  smoke-test-backend:
+    docker:
+      - image: alpine:latest
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - run: apk add curl
+      - run: 
+          name: smoke test backend
+          command: |
+            curl -m 20 "http://`cat /tmp/workspace/backend_url.txt`:3030/api/status"
+      - destroy-environment-and-revert-migrations:
+        when: on_fail
 
-#  smoke-test:
+  smoke-test-frontend:
+    docker:
+      - image: alpine:latest
+    steps:
+      - run: apk add curl
+      - run:
+          name: smoke test frontend
+          command: |
+            URL="http://udapeople-frontend-deployment-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-eu-west-2.amazonaws.com/#/employees"              
+            if curl -s ${URL} | grep "Welcome"; then return 0; else return 1 ; fi
+      - destroy-environment-and-revert-migrations:
+        when: on_fail
 
 #  cloudfront-update:
 
 workflows:
   default:
     jobs:
-      # - build-frontend
-      # - build-backend
-      # - test-frontend
-      # - test-backend
-      # - scan-frontend
-      # - scan-backend
-      # - create-infrastructure-backend:
-      #     requires:
-      #       - build-frontend
-      #       - build-backend
-      #       - test-frontend
-      #       - test-backend
-      #       - scan-frontend
-      #       - scan-backend
-      # - create-infrastructure-frontend:
-      #     requires:
-      #       - build-frontend
-      #       - build-backend
-      #       - test-frontend
-      #       - test-backend
-      #       - scan-frontend
-      #       - scan-backend
-      # - configure-infrastructure-and-deploy-backend:
-      #     requires:
-      #       - create-infrastructure-backend
-      #       - create-infrastructure-frontend
-      - run-migrations
-          # requires:
-          #   - configure-infrastructure-and-deploy-backend
-      # - prepare-frontend:
-      #     requires:
-      #       - run-migrations
-      # - deploy-frontend:
-      #     requires:
-      #       - prepare-frontend
+      - build-frontend
+      - build-backend
+      - test-frontend
+      - test-backend
+      - scan-frontend
+      - scan-backend
+      - create-infrastructure-backend:
+          requires:
+            - build-frontend
+            - build-backend
+            - test-frontend
+            - test-backend
+            - scan-frontend
+            - scan-backend
+      - create-infrastructure-frontend:
+          requires:
+            - build-frontend
+            - build-backend
+            - test-frontend
+            - test-backend
+            - scan-frontend
+            - scan-backend
+      - configure-infrastructure-and-deploy-backend:
+          requires:
+            - create-infrastructure-backend
+            - create-infrastructure-frontend
+      - run-migrations:
+          requires:
+            - configure-infrastructure-and-deploy-backend
+      - prepare-frontend:
+          requires:
+            - run-migrations
+      - deploy-frontend:
+          requires:
+            - prepare-frontend
+      - smoke-test-backend:
+          requires:
+            - deploy-frontend
+      - smoke-test-frontend:
+          requires:
+            - deploy-frontend
