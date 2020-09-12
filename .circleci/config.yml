@@ -243,17 +243,16 @@ jobs:
           command: |
             cd backend
             npm run migrations
-      - slack/notify-on-failure
-
-  take-note-migrations-ran:
-    docker:
-      - image: alpine:latest
-    steps:
-      - run: apk add curl
       - run:
-          name: use memstash to store boolean true value that migrations ran
+          name: Take note that migrations ran
           command: |
-            curl -H "Content-Type: text/plain" -H "token: 64feb3bf-1926-4aec-90fc-ec721a0f8ad6" --request PUT --data "true" https://api.memstash.io/values/migrated
+            mkdir /tmp/workspace
+            echo "true" > /tmp/workspace/migrations-ran.txt
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - migrations-ran.txt
+      - slack/notify-on-failure
 
   prepare-frontend:
     docker:
@@ -294,8 +293,6 @@ jobs:
           name: smoke test backend
           command: |
             curl -m 20 "http://`cat /tmp/workspace/backend_url.txt`:3030/api/status"
-      # - destroy-environment-and-revert-migrations:
-      #   when: on_fail
 
   smoke-test-frontend:
     docker:
@@ -307,8 +304,6 @@ jobs:
           command: |
             URL="http://udapeople-frontend-deployment-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-eu-west-2.amazonaws.com/#/employees"              
             if curl -s ${URL} | grep "Welcome"; then return 0; else return 1 ; fi
-      # - destroy-environment-and-revert-migrations:
-      #   when: on_fail
 
 #  cloudfront-update:
 
