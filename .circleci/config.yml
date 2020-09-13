@@ -51,6 +51,7 @@ jobs:
   build-frontend:
     docker:
       - image: circleci/node
+      - image: alpine:latest
     steps:
       - checkout
       - install-dependencies:
@@ -60,6 +61,7 @@ jobs:
           command: |
             cd frontend
             npm run build
+      - run: apk add curl
       - slack/notify-on-failure
 
   build-backend:
@@ -358,43 +360,43 @@ workflows:
   default:
     jobs:
       - build-frontend
-      - build-backend
-      # - test-frontend
-      # - test-backend
-      # - scan-frontend
-      - scan-backend
-      - create-infrastructure-backend:
-          requires:
-            - build-frontend
-            - build-backend
-            # - test-frontend
-            # - test-backend
-            # - scan-frontend
-            - scan-backend
-      - create-infrastructure-frontend:
-          requires:
-            - build-frontend
-            - build-backend
-            # - test-frontend
-            # - test-backend
-            # - scan-frontend
-            - scan-backend
-      - configure-infrastructure-and-deploy-backend:
-          requires:
-            - create-infrastructure-backend
-            - create-infrastructure-frontend
-      - run-migrations:
-          requires:
-            - configure-infrastructure-and-deploy-backend
-      - prepare-frontend:
-          requires:
-            - run-migrations
-      - deploy-frontend:
-          requires:
-            - prepare-frontend
-      - smoke-test-backend:
-          requires:
-            - deploy-frontend
-      - smoke-test-frontend:
-          requires:
-            - deploy-frontend
+      # - build-backend
+      # # - test-frontend
+      # # - test-backend
+      # # - scan-frontend
+      # - scan-backend
+      # - create-infrastructure-backend:
+      #     requires:
+      #       - build-frontend
+      #       - build-backend
+      #       # - test-frontend
+      #       # - test-backend
+      #       # - scan-frontend
+      #       - scan-backend
+      # - create-infrastructure-frontend:
+      #     requires:
+      #       - build-frontend
+      #       - build-backend
+      #       # - test-frontend
+      #       # - test-backend
+      #       # - scan-frontend
+      #       - scan-backend
+      # - configure-infrastructure-and-deploy-backend:
+      #     requires:
+      #       - create-infrastructure-backend
+      #       - create-infrastructure-frontend
+      # - run-migrations:
+      #     requires:
+      #       - configure-infrastructure-and-deploy-backend
+      # - prepare-frontend:
+      #     requires:
+      #       - run-migrations
+      # - deploy-frontend:
+      #     requires:
+      #       - prepare-frontend
+      # - smoke-test-backend:
+      #     requires:
+      #       - deploy-frontend
+      # - smoke-test-frontend:
+      #     requires:
+      #       - deploy-frontend
