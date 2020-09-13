@@ -299,7 +299,7 @@ jobs:
       - aws-cli/destroy-environment:
         when: on_fail
       - node/revert-migrations:
-        when: on_fail
+          when: on_fail
 
   smoke-test-frontend:
     docker:
@@ -312,7 +312,7 @@ jobs:
             URL="http://udapeople-frontend-deployment-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-eu-west-2.amazonaws.com/#/employees"              
             if curl -s ${URL} | grep "Welcome"; then return 0; else return 1 ; fi
       - aws-cli/destroy-environment:
-        when: on_fail
+          when: on_fail
 
 #  cloudfront-update:
 
