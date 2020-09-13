@@ -214,7 +214,7 @@ jobs:
     steps:
       - checkout
       - add_ssh_keys:
-          fingerprints: ["37:17:a8:70:7e:f8:d1:af:e2:5c:8c:4d:5f:26:46:77"]
+          fingerprints: ["d1:66:b0:16:41:57:af:82:cc:c8:ee:b5:68:ef:52:d6"]
       - attach_workspace:
           at: /tmp/workspace
       - run:
@@ -314,7 +314,7 @@ jobs:
       # - aws-cli/destroy-environment:
       #     when: on_fail
 
-      
+
 #  cloudfront-update:
 
 workflows:
