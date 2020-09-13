@@ -320,6 +320,7 @@ jobs:
       - run: apt upgrade -y
       - run: apt install curl -y
       - run: apt install unzip -y
+      - run: apt-get update && apt-get install -yy less
       - run:
           name: Install aws
           command: |
