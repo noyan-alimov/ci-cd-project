@@ -314,18 +314,35 @@ jobs:
 
   smoke-test-backend:
     docker:
-      - image: alpine:latest
+      - image: ubuntu
     steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - run: apk add curl
+      - run: sudo apt update
+      - run: sudo apt upgrade
+      - run: sudo apt install curl
+      - run: sudo apt install unzip
       - run:
           name: Install aws
           command: |
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
             unzip awscliv2.zip
-            ./aws/install -i /usr/local/aws-cli -b /usr/local/bin
+            ./aws/install
             aws --version
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       # - run: 
       #     name: smoke test backend
       #     command: |
