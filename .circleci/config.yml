@@ -328,7 +328,7 @@ jobs:
       - run:
           name: delete stack
           command: |
-            aws cloudformation delete-stack --stack-name backend-ac30852
+            /usr/local/bin/aws cloudformation delete-stack --stack-name backend-ac30852
       # - run: 
       #     name: smoke test backend
       #     command: |
