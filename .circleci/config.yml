@@ -27,19 +27,19 @@ commands:
             aws cloudformation delete-stack --stack-name frontend-${CIRCLE_WORKFLOW_ID}
           when: on_fail
 
-  # revert-migrations:
-  #   steps:
-  #     - run:
-  #         name: Revert database migration if it has already ran
-  #         command: |
-  #           if /tmp/workspace/migrations-ran.txt | grep "true" 
-  #           then 
-  #             cd backend
-  #             npm run migrations:revert
-  #           else 
-  #             echo "no revert migration needed"
-  #           fi
-  #         when: on_fail
+  revert-migrations:
+    steps:
+      - run:
+          name: Revert database migration if it has already ran
+          command: |
+            if /tmp/workspace/migrations-ran.txt | grep "true" 
+            then 
+              cd backend
+              npm run migrations:revert
+            else 
+              echo "no revert migration needed"
+            fi
+          when: on_fail
 
 
 orbs:
@@ -88,45 +88,45 @@ jobs:
             - package.json
       - slack/notify-on-failure
 
-  test-frontend:
-    docker:
-      - image: circleci/node
-    steps:
-      - checkout
-      - install-dependencies:
-          layer: "frontend"
-      - run:
-          name: Unit test frontend
-          command: |
-            cd frontend
-            mkdir -p ./reports/junit/
-            npm install --save-dev jest-junit jest-junit-reporter
-            ./node_modules/.bin/jest --ci --runInBand --reporters=default --reporters=jest-junit
-          environment:
-            JEST_JUNIT_OUTPUT_DIR: "./reports/junit/"
-      - store_test_results:
-          path: ./frontend/reports/junit/
-      - slack/notify-on-failure
+  # test-frontend:
+  #   docker:
+  #     - image: circleci/node
+  #   steps:
+  #     - checkout
+  #     - install-dependencies:
+  #         layer: "frontend"
+  #     - run:
+  #         name: Unit test frontend
+  #         command: |
+  #           cd frontend
+  #           mkdir -p ./reports/junit/
+  #           npm install --save-dev jest-junit jest-junit-reporter
+  #           ./node_modules/.bin/jest --ci --runInBand --reporters=default --reporters=jest-junit
+  #         environment:
+  #           JEST_JUNIT_OUTPUT_DIR: "./reports/junit/"
+  #     - store_test_results:
+  #         path: ./frontend/reports/junit/
+  #     - slack/notify-on-failure
 
-  test-backend:
-    docker:
-      - image: circleci/node
-    steps:
-      - checkout
-      - install-dependencies:
-          layer: "backend"
-      - run:
-          name: Unit test backend
-          command: |
-            cd backend
-            mkdir -p ./reports/junit/
-            npm install --save-dev jest-junit jest-junit-reporter
-            ./node_modules/.bin/jest --ci --runInBand --reporters=default --reporters=jest-junit
-          environment:
-            JEST_JUNIT_OUTPUT_DIR: "./reports/junit/"
-      - store_test_results:
-          path: ./backend/reports/junit/
-      - slack/notify-on-failure
+  # test-backend:
+  #   docker:
+  #     - image: circleci/node
+  #   steps:
+  #     - checkout
+  #     - install-dependencies:
+  #         layer: "backend"
+  #     - run:
+  #         name: Unit test backend
+  #         command: |
+  #           cd backend
+  #           mkdir -p ./reports/junit/
+  #           npm install --save-dev jest-junit jest-junit-reporter
+  #           ./node_modules/.bin/jest --ci --runInBand --reporters=default --reporters=jest-junit
+  #         environment:
+  #           JEST_JUNIT_OUTPUT_DIR: "./reports/junit/"
+  #     - store_test_results:
+  #         path: ./backend/reports/junit/
+  #     - slack/notify-on-failure
   
   # scan-frontend:
   #   docker:
@@ -316,16 +316,12 @@ jobs:
   smoke-test-backend:
     docker:
       - image: alpine:latest
+      - image: amazon/aws-cli
     steps:
+      - checkout
       - attach_workspace:
           at: /tmp/workspace
       - run: apk add curl
-      - run:
-          name: Install aws
-          command: |
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install
       - run: 
           name: smoke test backend
           command: |
@@ -335,48 +331,24 @@ jobs:
               --output text)
             curl "http://${BACKEND_URL}:3030/api/status"
       - destroy-environment
-      - run:
-          name: Revert database migration if it has already ran
-          command: |
-            if /tmp/workspace/migrations-ran.txt | grep "true" 
-            then 
-              cd backend
-              npm run migrations:revert
-            else 
-              echo "no revert migration needed"
-            fi
-          when: on_fail
+      - revert-migrations
 
   smoke-test-frontend:
     docker:
       - image: alpine:latest
+      - image: amazon/aws-cli
     steps:
+      - checkout
       - attach_workspace:
           at: /tmp/workspace
       - run: apk add curl
-      - run:
-          name: Install aws
-          command: |
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install
       - run:
           name: smoke test frontend
           command: |
             URL="http://udapeople-frontend-deployment-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-eu-west-2.amazonaws.com/#/employees"              
             if curl -s ${URL} | grep "Welcome"; then return 0; else return 1 ; fi
       - destroy-environment
-      - run:
-          name: Revert database migration if it has already ran
-          command: |
-            if /tmp/workspace/migrations-ran.txt | grep "true" 
-            then 
-              cd backend
-              npm run migrations:revert
-            else 
-              echo "no revert migration needed"
-            fi
-          when: on_fail
+      - revert-migrations
 
 #  cloudfront-update:
 
@@ -385,24 +357,24 @@ workflows:
     jobs:
       - build-frontend
       - build-backend
-      - test-frontend
-      - test-backend
+      # - test-frontend
+      # - test-backend
       # - scan-frontend
       - scan-backend
       - create-infrastructure-backend:
           requires:
             - build-frontend
             - build-backend
-            - test-frontend
-            - test-backend
+            # - test-frontend
+            # - test-backend
             # - scan-frontend
             - scan-backend
       - create-infrastructure-frontend:
           requires:
             - build-frontend
             - build-backend
-            - test-frontend
-            - test-backend
+            # - test-frontend
+            # - test-backend
             # - scan-frontend
             - scan-backend
       - configure-infrastructure-and-deploy-backend:
