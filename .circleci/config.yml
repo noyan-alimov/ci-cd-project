@@ -17,12 +17,6 @@ commands:
   destroy-environment:
     steps:
       - run:
-          name: Install aws
-          command: |
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            ./aws/install
-      - run:
           name: Destroy backend
           command: |
             aws cloudformation delete-stack --stack-name backend-${CIRCLE_WORKFLOW_ID}
@@ -325,6 +319,12 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - run: apk add curl
+      - run:
+          name: Install aws
+          command: |
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            ./aws/install
       - run: 
           name: smoke test backend
           command: |
