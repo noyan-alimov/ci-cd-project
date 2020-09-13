@@ -32,7 +32,7 @@ commands:
       - run:
           name: Revert database migration if it has already ran
           command: |
-            if /tmp/workspace/migrations-ran.txt | grep "true" 
+            if grep -q "true" /tmp/workspace/migrations-ran.txt 
             then 
               cd backend
               npm run migrations:revert
@@ -314,11 +314,12 @@ jobs:
             aws s3 sync . s3://udapeople-frontend-deployment-${CIRCLE_WORKFLOW_ID:0:7}
 
   smoke-test-backend:
+    executor: aws-cli/default
     docker:
       - image: alpine:latest
-      - image: amazon/aws-cli
     steps:
-      - checkout
+      - aws-cli/setup:
+          profile-name: default
       - attach_workspace:
           at: /tmp/workspace
       - run: apk add curl
@@ -334,11 +335,12 @@ jobs:
       - revert-migrations
 
   smoke-test-frontend:
+    executor: aws-cli/default
     docker:
       - image: alpine:latest
-      - image: amazon/aws-cli
     steps:
-      - checkout
+      - aws-cli/setup:
+          profile-name: default
       - attach_workspace:
           at: /tmp/workspace
       - run: apk add curl
