@@ -1,1 +1,2 @@
 01: https://github.com/noyan-alimov/ci-cd-project
+02: https://udapeople-frontend-deployment-8b43a77.s3.eu-west-2.amazonaws.com/index.html
