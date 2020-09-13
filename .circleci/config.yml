@@ -325,15 +325,19 @@ jobs:
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
             unzip awscliv2.zip
             ./aws/install
-      - run: 
-          name: smoke test backend
+      - run:
+          name: delete stack
           command: |
-            BACKEND_URL=$(aws ec2 describe-instances \
-              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --query 'Reservations[*].Instances[*].PublicDnsName' \
-              --output text)
-            curl "http://${BACKEND_URL}:3030/api/status"
-      - destroy-environment
+            aws cloudformation delete-stack --stack-name backend-ac30852
+      # - run: 
+      #     name: smoke test backend
+      #     command: |
+      #       BACKEND_URL=$(aws ec2 describe-instances \
+      #         --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+      #         --query 'Reservations[*].Instances[*].PublicDnsName' \
+      #         --output text)
+      #       curl "http://${BACKEND_URL}:3030/api/status"
+      # - destroy-environment
       # - revert-migrations
 
   smoke-test-frontend:
@@ -362,7 +366,7 @@ workflows:
       # - test-backend
       # - scan-frontend
       # - scan-backend
-      - create-infrastructure-backend
+      # - create-infrastructure-backend
           # requires:
             # - build-frontend
             # - build-backend
@@ -390,9 +394,9 @@ workflows:
       # - deploy-frontend:
       #     requires:
       #       - prepare-frontend
-      - smoke-test-backend:
-          requires:
-            - create-infrastructure-backend
+      - smoke-test-backend
+          # requires:
+          #   - create-infrastructure-backend
       # - smoke-test-frontend:
       #     requires:
       #       - deploy-frontend
