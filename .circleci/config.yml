@@ -17,6 +17,12 @@ commands:
   destroy-environment:
     steps:
       - run:
+          name: Install aws
+          command: |
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+      - run:
           name: Destroy backend environment
           command: |
             aws cloudformation delete-stack --stack-name backend-${CIRCLE_WORKFLOW_ID}
@@ -308,7 +314,8 @@ jobs:
             aws s3 sync . s3://udapeople-frontend-deployment-${CIRCLE_WORKFLOW_ID:0:7}
 
   smoke-test-backend:
-    executor: aws-cli/default
+    docker:
+      - image: alpine:latest
     steps:
       - attach_workspace:
           at: /tmp/workspace
@@ -321,7 +328,8 @@ jobs:
       - destroy-environment
 
   smoke-test-frontend:
-    executor: aws-cli/default
+    docker:
+      - image: alpine:latest
     steps:
       - run: apk add curl
       - run:
