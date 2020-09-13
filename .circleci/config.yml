@@ -296,10 +296,10 @@ jobs:
           name: smoke test backend
           command: |
             curl -m 20 "http://`cat /tmp/workspace/backend_url.txt`:3030/api/status"
-      - aws-cli/destroy-environment:
-          when: on_fail
-      - node/revert-migrations:
-          when: on_fail
+      # - aws-cli/destroy-environment:
+      #     when: on_fail
+      # - node/revert-migrations:
+      #     when: on_fail
 
   smoke-test-frontend:
     docker:
@@ -311,8 +311,8 @@ jobs:
           command: |
             URL="http://udapeople-frontend-deployment-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-eu-west-2.amazonaws.com/#/employees"              
             if curl -s ${URL} | grep "Welcome"; then return 0; else return 1 ; fi
-      - aws-cli/destroy-environment:
-          when: on_fail
+      # - aws-cli/destroy-environment:
+      #     when: on_fail
 
 #  cloudfront-update:
 
