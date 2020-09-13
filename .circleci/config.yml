@@ -272,6 +272,15 @@ jobs:
             export API_URL=http://`cat /tmp/workspace/backend_url.txt`:3030
             cd frontend            
             npm run build
+      - run:
+          name: save front build
+          command: |
+            cd frontend/dist
+            tar -zcvf /tmp/workspace/frontend.tar.gz ./
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - frontend.tar.gz
       - slack/notify-on-failure
     
   deploy-frontend:
@@ -279,10 +288,21 @@ jobs:
     steps:
       - aws-cli/setup:
           profile-name: default
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: decompress frontend
+          command: |
+            echo `ls /tmp/workspace`
+            mkdir ~/frontend
+            cp /tmp/workspace/frontend.tar.gz ~/frontend
+            cd ~/frontend
+            tar -zxvf frontend.tar.gz
+            echo `ls -la`
       - run:
           name: deploy to s3 bucket
           command: |
-            cd frontend/dist
+            cd ~/frontend
             aws s3 sync . s3://udapeople-frontend-deployment-${CIRCLE_WORKFLOW_ID:0:7}
 
   smoke-test-backend:
