@@ -324,9 +324,8 @@ jobs:
           command: |
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
             unzip awscliv2.zip
-            ./aws/install
-            /usr/local/bin/aws --version
-            /usr/local/bin/aws cloudformation delete-stack --stack-name backend-ac30852
+            ./aws/install -i /usr/local/aws-cli -b /usr/local/bin
+            aws --version
       # - run: 
       #     name: smoke test backend
       #     command: |
