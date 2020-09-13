@@ -297,7 +297,7 @@ jobs:
           command: |
             curl -m 20 "http://`cat /tmp/workspace/backend_url.txt`:3030/api/status"
       - aws-cli/destroy-environment:
-        when: on_fail
+          when: on_fail
       - node/revert-migrations:
           when: on_fail
 
