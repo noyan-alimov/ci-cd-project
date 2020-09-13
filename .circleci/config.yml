@@ -38,7 +38,13 @@ commands:
       - run:
           name: Revert database migration if it has already ran
           command: |
-            if /tmp/workspace/migrations-ran.txt | grep "true"; then npm run migrations:revert; else echo "no revert migration needed"; fi
+            if /tmp/workspace/migrations-ran.txt | grep "true" 
+            then 
+              cd backend
+              npm run migrations:revert
+            else 
+              echo "no revert migration needed"
+            fi
           when: on_fail
 
 
@@ -326,11 +332,14 @@ jobs:
             BACKEND_URL=$(cat /tmp/workspace/backend_url.txt)
             curl "http://${BACKEND_URL}:3030/api/status"
       - destroy-environment
+      - revert-migrations
 
   smoke-test-frontend:
     docker:
       - image: alpine:latest
     steps:
+      - attach_workspace:
+          at: /tmp/workspace
       - run: apk add curl
       - run:
           name: smoke test frontend
@@ -338,6 +347,7 @@ jobs:
             URL="http://udapeople-frontend-deployment-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-eu-west-2.amazonaws.com/#/employees"              
             if curl -s ${URL} | grep "Welcome"; then return 0; else return 1 ; fi
       - destroy-environment
+      - revert-migrations
 
 #  cloudfront-update:
 
