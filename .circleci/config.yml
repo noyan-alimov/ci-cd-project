@@ -120,19 +120,19 @@ jobs:
           path: ./backend/reports/junit/
       - slack/notify-on-failure
   
-  scan-frontend:
-    docker:
-      - image: circleci/node
-    steps:
-      - checkout
-      - install-dependencies:
-          layer: "frontend"
-      - run:
-          name: Analyze frontend
-          command: |
-            cd frontend
-            npm audit fix --audit-level=critical
-      - slack/notify-on-failure
+  # scan-frontend:
+  #   docker:
+  #     - image: circleci/node
+  #   steps:
+  #     - checkout
+  #     - install-dependencies:
+  #         layer: "frontend"
+  #     - run:
+  #         name: Analyze frontend
+  #         command: |
+  #           cd frontend
+  #           npm audit fix --audit-level=critical
+  #     - slack/notify-on-failure
 
   scan-backend:
     docker:
@@ -343,7 +343,7 @@ workflows:
       - build-backend
       - test-frontend
       - test-backend
-      - scan-frontend
+      # - scan-frontend
       - scan-backend
       - create-infrastructure-backend:
           requires:
@@ -351,7 +351,7 @@ workflows:
             - build-backend
             - test-frontend
             - test-backend
-            - scan-frontend
+            # - scan-frontend
             - scan-backend
       - create-infrastructure-frontend:
           requires:
@@ -359,7 +359,7 @@ workflows:
             - build-backend
             - test-frontend
             - test-backend
-            - scan-frontend
+            # - scan-frontend
             - scan-backend
       - configure-infrastructure-and-deploy-backend:
           requires:
