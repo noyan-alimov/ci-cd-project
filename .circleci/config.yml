@@ -46,7 +46,7 @@ commands:
       - run:
           name: Revert database migration if it has already ran
           command: |
-            if grep -q "true" /tmp/workspace/migrations-ran.txt 
+            if curl -H "token: 64feb3bf-1926-4aec-90fc-ec721a0f8ad6" --request GET https://api.memstash.io/values/${CIRCLE_WORKFLOW_ID} | grep "true"
             then 
               cd backend
               npm run migrations:revert
@@ -265,8 +265,6 @@ jobs:
       - image: cimg/node:lts
     steps:
       - checkout
-      - attach_workspace:
-          at: /tmp/workspace
       - install-dependencies:
           layer: "backend"
       - run:
@@ -277,11 +275,7 @@ jobs:
       - run:
           name: Take note that migrations ran
           command: |
-            echo "true" > /tmp/workspace/migrations-ran.txt
-      - persist_to_workspace:
-          root: /tmp/workspace
-          paths:
-            - migrations-ran.txt
+            curl -H "Content-Type: text/plain" -H "token: 64feb3bf-1926-4aec-90fc-ec721a0f8ad6" --request PUT --data "true" https://api.memstash.io/values/${CIRCLE_WORKFLOW_ID}
       - slack/notify-on-failure
 
   prepare-frontend:
@@ -337,26 +331,22 @@ jobs:
       - image: alpine:latest
     steps:
       - install-tools-on-alpine
-      # - attach_workspace:
-      #     at: /tmp/workspace
       - run: 
           name: smoke test backend
           command: |
             BACKEND_URL=$(aws ec2 describe-instances \
-              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --filters "Name=tag:Name,Values=backend-backend-deployment-${CIRCLE_WORKFLOW_ID:0:7}" \
               --query 'Reservations[*].Instances[*].PublicDnsName' \
               --output text)
             curl "http://${BACKEND_URL}:3030/api/status"
-      # - destroy-environment
-      # - revert-migrations
+      - destroy-environment
+      - revert-migrations
 
   smoke-test-frontend:
     docker:
       - image: alpine:latest
     steps:
       - install-tools-on-alpine
-      # - attach_workspace:
-      #     at: /tmp/workspace
       - run:
           name: smoke test frontend
           command: |
@@ -368,7 +358,7 @@ jobs:
               return 0
             fi
       - destroy-environment
-      # - revert-migrations
+      - revert-migrations
 
 #  cloudfront-update:
 
@@ -400,8 +390,9 @@ workflows:
       # - configure-infrastructure-and-deploy-backend:
       #     requires:
       #       - create-infrastructure-backend
-      # - run-migrations:
-      #     requires:
+      - run-migrations
+          requires:
+            - create-infrastructure-backend
       #       - configure-infrastructure-and-deploy-backend
       # - prepare-frontend:
       #     requires:
@@ -411,8 +402,8 @@ workflows:
       #       - prepare-frontend
       - smoke-test-backend:
           requires:
-            - create-infrastructure-backend
-          #   - run-migrations
+            # - create-infrastructure-backend
+            - run-migrations
       # - smoke-test-frontend:
       #     requires:
       #       - deploy-frontend

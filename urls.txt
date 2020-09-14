@@ -1,8 +1,2 @@
 01: https://github.com/noyan-alimov/ci-cd-project
 02: https://udapeople-frontend-deployment-593353a.s3.eu-west-2.amazonaws.com/index.html#/employees
-
-
-aws ec2 describe-instances \
-              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --query 'Reservations[*].Instances[*].PublicDnsName' \
-              --output text
