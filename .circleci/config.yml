@@ -390,7 +390,7 @@ workflows:
       # - configure-infrastructure-and-deploy-backend:
       #     requires:
       #       - create-infrastructure-backend
-      - run-migrations
+      - run-migrations:
           requires:
             - create-infrastructure-backend
       #       - configure-infrastructure-and-deploy-backend
