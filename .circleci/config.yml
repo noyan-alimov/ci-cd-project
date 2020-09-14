@@ -14,16 +14,25 @@ commands:
             npm i
       - slack/notify-on-failure
 
+  install-tools-on-ubuntu:
+    steps:
+      - run: apt update
+      - run: apt upgrade -y
+      - run: apt install curl -y
+      - run: apt install unzip -y
+      - run: apt-get update && apt-get install -yy less
+      - run: apt install awscli -y
+
   destroy-environment:
     steps:
       - run:
           name: Destroy backend
           command: |
             aws cloudformation delete-stack --stack-name backend-${CIRCLE_WORKFLOW_ID}
-      # - run:
-      #     name: Destroy frontend
-      #     command: |
-      #       aws cloudformation delete-stack --stack-name frontend-${CIRCLE_WORKFLOW_ID}
+      - run:
+          name: Destroy frontend
+          command: |
+            aws cloudformation delete-stack --stack-name frontend-${CIRCLE_WORKFLOW_ID}
 
   revert-migrations:
     steps:
@@ -240,12 +249,18 @@ jobs:
           command: |
             cd .circleci/ansible
             ansible-playbook -i inventory.txt playbook.yml
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - backend_url.txt
             
   run-migrations:
     docker:
       - image: cimg/node:lts
     steps:
       - checkout
+      - attach_workspace:
+          at: /tmp/workspace
       - install-dependencies:
           layer: "backend"
       - run:
@@ -256,7 +271,6 @@ jobs:
       - run:
           name: Take note that migrations ran
           command: |
-            mkdir /tmp/workspace
             echo "true" > /tmp/workspace/migrations-ran.txt
       - persist_to_workspace:
           root: /tmp/workspace
@@ -316,58 +330,33 @@ jobs:
     docker:
       - image: ubuntu
     steps:
-      - run: apt update
-      - run: apt upgrade -y
-      - run: apt install curl -y
-      - run: apt install unzip -y
-      - run: apt-get update && apt-get install -yy less
-      - run:
-          name: Install aws
+      - install-tools-on-ubuntu
+      - attach_workspace:
+          at: /tmp/workspace
+      - run: 
+          name: smoke test backend
           command: |
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            ./aws/install
-            aws cloudformation delete-stack --stack-name backend-f647883
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      # - run: 
-      #     name: smoke test backend
-      #     command: |
-      #       BACKEND_URL=$(aws ec2 describe-instances \
-      #         --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-      #         --query 'Reservations[*].Instances[*].PublicDnsName' \
-      #         --output text)
-      #       curl "http://${BACKEND_URL}:3030/api/status"
-      # - destroy-environment
-      # - revert-migrations
+            BACKEND_URL=$(aws ec2 describe-instances \
+              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --query 'Reservations[*].Instances[*].PublicDnsName' \
+              --output text)
+            curl "http://${BACKEND_URL}:3030/api/status"
+      - destroy-environment
+      - revert-migrations
 
   smoke-test-frontend:
     docker:
-      - image: alpine:latest
+      - image: ubuntu
     steps:
+      - install-tools-on-ubuntu
       - attach_workspace:
           at: /tmp/workspace
-      - run: apk add curl
       - run:
           name: smoke test frontend
           command: |
             URL="http://udapeople-frontend-deployment-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-eu-west-2.amazonaws.com/#/employees"              
             if curl -s ${URL} | grep "Welcome"; then return 0; else return 1 ; fi
-      - destroy/environment
+      - destroy-environment
       - revert-migrations
 
 #  cloudfront-update:
@@ -375,43 +364,44 @@ jobs:
 workflows:
   default:
     jobs:
-      # - build-frontend
-      # - build-backend
+      - build-frontend
+      - build-backend
       # - test-frontend
       # - test-backend
       # - scan-frontend
-      # - scan-backend
-      # - create-infrastructure-backend
-          # requires:
-            # - build-frontend
-            # - build-backend
+      - scan-backend
+      - create-infrastructure-backend:
+          requires:
+            - build-frontend
+            - build-backend
             # - test-frontend
             # - test-backend
             # - scan-frontend
-            # - scan-backend
-      # - create-infrastructure-frontend
-          # requires:
-            # - build-frontend
-            # - build-backend
+            - scan-backend
+      - create-infrastructure-frontend:
+          requires:
+            - build-frontend
+            - build-backend
             # - test-frontend
             # - test-backend
             # - scan-frontend
-            # - scan-backend
-      # - configure-infrastructure-and-deploy-backend:
-      #     requires:
-      #       - create-infrastructure-backend
-      # - run-migrations:
-      #     requires:
-      #       - configure-infrastructure-and-deploy-backend
-      # - prepare-frontend:
-      #     requires:
-      #       - create-infrastructure-frontend
-      # - deploy-frontend:
-      #     requires:
-      #       - prepare-frontend
-      - smoke-test-backend
-          # requires:
-          #   - create-infrastructure-backend
-      # - smoke-test-frontend:
-      #     requires:
-      #       - deploy-frontend
+            - scan-backend
+      - configure-infrastructure-and-deploy-backend:
+          requires:
+            - create-infrastructure-backend
+      - run-migrations:
+          requires:
+            - configure-infrastructure-and-deploy-backend
+      - prepare-frontend:
+          requires:
+            - create-infrastructure-frontend
+      - deploy-frontend:
+          requires:
+            - prepare-frontend
+      - smoke-test-backend:
+          requires:
+            - run-migrations
+      - smoke-test-frontend:
+          requires:
+            - deploy-frontend
+            - run-migrations
