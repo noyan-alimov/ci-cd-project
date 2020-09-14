@@ -365,15 +365,15 @@ workflows:
   default:
     jobs:
       # - build-frontend
-      # - build-backend
+      - build-backend
       # # - test-frontend
       # # - test-backend
       # # - scan-frontend
       # - scan-backend
-      - create-infrastructure-backend
-          # requires:
-      #       - build-frontend
-            # - build-backend
+      - create-infrastructure-backend:
+          requires:
+            # - build-frontend
+            - build-backend
       #       # - test-frontend
       #       # - test-backend
       #       # - scan-frontend
