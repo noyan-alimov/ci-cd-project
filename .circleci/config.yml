@@ -41,19 +41,6 @@ commands:
       #       aws cloudformation delete-stack --stack-name frontend-${CIRCLE_WORKFLOW_ID:0:7}
       #     when: on_fail
 
-  revert-migrations:
-    steps:
-      - run:
-          name: Revert database migration if it has already ran
-          command: |
-            if curl -H "token: 64feb3bf-1926-4aec-90fc-ec721a0f8ad6" --request GET https://api.memstash.io/values/randomid| grep "true"
-            then 
-              ls
-            else 
-              echo "no revert migration needed"
-            fi
-          # when: on_fail
-
 
 orbs:
   slack: circleci/slack@3.4.2
@@ -339,7 +326,16 @@ jobs:
       #         --output text)
       #       curl "http://${BACKEND_URL}:3030/api/status"
       # - destroy-environment
-      - revert-migrations
+      - run:
+          name: Revert database migration if it has already ran
+          command: |
+            if curl -H "token: 64feb3bf-1926-4aec-90fc-ec721a0f8ad6" --request GET https://api.memstash.io/values/randomid | grep "true"
+            then 
+              ls
+              echo "revert migration"
+            else 
+              echo "no revert migration needed"
+            fi
 
   smoke-test-frontend:
     docker:
