@@ -30,14 +30,16 @@ commands:
 
   destroy-environment:
     steps:
-    #   - run:
-    #       name: Destroy backend
-    #       command: |
-    #         aws cloudformation delete-stack --stack-name backend-${CIRCLE_WORKFLOW_ID:0:7}
+      # - run:
+      #     name: Destroy backend
+      #     command: |
+      #       aws cloudformation delete-stack --stack-name backend-${CIRCLE_WORKFLOW_ID:0:7}
+      #     when: on_fail
       - run:
           name: Destroy frontend
           command: |
             aws cloudformation delete-stack --stack-name frontend-${CIRCLE_WORKFLOW_ID:0:7}
+          when: on_fail
 
   revert-migrations:
     steps:
@@ -332,9 +334,9 @@ jobs:
 
   smoke-test-backend:
     docker:
-      - image: ubuntu
+      - image: alpine:latest
     steps:
-      - install-tools-on-ubuntu
+      - install-tools-on-alpine
       # - attach_workspace:
       #     at: /tmp/workspace
       - run: 
@@ -379,7 +381,7 @@ workflows:
       # # - test-backend
       # # - scan-frontend
       # - scan-backend
-      # - create-infrastructure-backend:
+      - create-infrastructure-backend
       #     requires:
       #       - build-frontend
       #       - build-backend
@@ -387,7 +389,7 @@ workflows:
       #       # - test-backend
       #       # - scan-frontend
       #       - scan-backend
-      - create-infrastructure-frontend
+      # - create-infrastructure-frontend:
       #     requires:
       #       - build-frontend
       #       - build-backend
@@ -407,11 +409,11 @@ workflows:
       # - deploy-frontend:
       #     requires:
       #       - prepare-frontend
-      # - smoke-test-backend:
-          # requires:
-          #   - run-migrations
-      - smoke-test-frontend:
+      - smoke-test-backend:
           requires:
-            - create-infrastructure-frontend
+            - create-infrastructure-backend
+          #   - run-migrations
+      # - smoke-test-frontend:
+      #     requires:
       #       - deploy-frontend
       #       - run-migrations
