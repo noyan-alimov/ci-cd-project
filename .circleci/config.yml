@@ -29,7 +29,7 @@ commands:
       #       ./aws/install
 
   destroy-environment:
-    # steps:
+    steps:
     #   - run:
     #       name: Destroy backend
     #       command: |
