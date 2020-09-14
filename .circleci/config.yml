@@ -347,7 +347,7 @@ jobs:
               --query 'Reservations[*].Instances[*].PublicDnsName' \
               --output text)
             curl "http://${BACKEND_URL}:3030/api/status"
-      - destroy-environment
+      # - destroy-environment
       # - revert-migrations
 
   smoke-test-frontend:
