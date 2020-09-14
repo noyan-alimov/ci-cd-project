@@ -17,7 +17,7 @@ commands:
   install-tools-on-alpine:
     steps:
       - run: apk add --update curl
-      - run: apk add aws-cli
+      # - run: apk add aws-cli
       # - run: apt install curl -y
       # - run: apt install unzip -y
       # - run: apt-get update && apt-get install -yy less
@@ -46,14 +46,13 @@ commands:
       - run:
           name: Revert database migration if it has already ran
           command: |
-            if curl -H "token: 64feb3bf-1926-4aec-90fc-ec721a0f8ad6" --request GET https://api.memstash.io/values/${CIRCLE_WORKFLOW_ID} | grep "true"
+            if curl -H "token: 64feb3bf-1926-4aec-90fc-ec721a0f8ad6" --request GET https://api.memstash.io/values/randomid| grep "true"
             then 
-              cd backend
-              npm run migrations:revert
+              ls
             else 
               echo "no revert migration needed"
             fi
-          when: on_fail
+          # when: on_fail
 
 
 orbs:
@@ -347,17 +346,17 @@ jobs:
       - image: alpine:latest
     steps:
       - install-tools-on-alpine
-      - run:
-          name: smoke test frontend
-          command: |
-            URL="http://udapeople-frontend-deployment-abd1603.s3-website-eu-west-2.amazonaws.com/#/employees"              
-            if curl -s ${URL} | grep "Welcome"
-            then
-              return 1
-            else
-              return 0
-            fi
-      - destroy-environment
+      # - run:
+      #     name: smoke test frontend
+      #     command: |
+      #       URL="http://udapeople-frontend-deployment-abd1603.s3-website-eu-west-2.amazonaws.com/#/employees"              
+      #       if curl -s ${URL} | grep "Welcome"
+      #       then
+      #         return 1
+      #       else
+      #         return 0
+      #       fi
+      # - destroy-environment
       - revert-migrations
 
 #  cloudfront-update:
@@ -371,7 +370,7 @@ workflows:
       # # - test-backend
       # # - scan-frontend
       # - scan-backend
-      - create-infrastructure-backend
+      # - create-infrastructure-backend
       #     requires:
       #       - build-frontend
       #       - build-backend
@@ -390,9 +389,9 @@ workflows:
       # - configure-infrastructure-and-deploy-backend:
       #     requires:
       #       - create-infrastructure-backend
-      - run-migrations:
-          requires:
-            - create-infrastructure-backend
+      # - run-migrations:
+      #     requires:
+      #       - create-infrastructure-backend
       #       - configure-infrastructure-and-deploy-backend
       # - prepare-frontend:
       #     requires:
@@ -400,11 +399,11 @@ workflows:
       # - deploy-frontend:
       #     requires:
       #       - prepare-frontend
-      - smoke-test-backend:
-          requires:
+      # - smoke-test-backend:
+          # requires:
             # - create-infrastructure-backend
-            - run-migrations
-      # - smoke-test-frontend:
+            # - run-migrations
+      - smoke-test-frontend
       #     requires:
       #       - deploy-frontend
       #       - run-migrations
