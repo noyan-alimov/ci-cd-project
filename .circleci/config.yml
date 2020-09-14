@@ -14,30 +14,30 @@ commands:
             npm i
       - slack/notify-on-failure
 
-  install-tools-on-ubuntu:
+  install-tools-on-alpine:
     steps:
-      - run: apt update
-      - run: apt upgrade -y
-      - run: apt install curl -y
-      - run: apt install unzip -y
-      - run: apt-get update && apt-get install -yy less
-      - run:
-          name: install aws cli
-          command: |
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            ./aws/install
+      - run: apk add --update curl
+      - run: apk add aws-cli
+      # - run: apt install curl -y
+      # - run: apt install unzip -y
+      # - run: apt-get update && apt-get install -yy less
+      # - run:
+      #     name: install aws cli
+      #     command: |
+      #       curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+      #       unzip awscliv2.zip
+      #       ./aws/install
 
   destroy-environment:
-    steps:
-      - run:
-          name: Destroy backend
-          command: |
-            aws cloudformation delete-stack --stack-name backend-abd1603
+    # steps:
+    #   - run:
+    #       name: Destroy backend
+    #       command: |
+    #         aws cloudformation delete-stack --stack-name backend-${CIRCLE_WORKFLOW_ID:0:7}
       - run:
           name: Destroy frontend
           command: |
-            aws cloudformation delete-stack --stack-name frontend-abd1603
+            aws cloudformation delete-stack --stack-name frontend-${CIRCLE_WORKFLOW_ID:0:7}
 
   revert-migrations:
     steps:
@@ -350,9 +350,9 @@ jobs:
 
   smoke-test-frontend:
     docker:
-      - image: ubuntu
+      - image: alpine:latest
     steps:
-      - install-tools-on-ubuntu
+      - install-tools-on-alpine
       # - attach_workspace:
       #     at: /tmp/workspace
       - run:
@@ -387,7 +387,7 @@ workflows:
       #       # - test-backend
       #       # - scan-frontend
       #       - scan-backend
-      # - create-infrastructure-frontend:
+      - create-infrastructure-frontend
       #     requires:
       #       - build-frontend
       #       - build-backend
@@ -407,10 +407,11 @@ workflows:
       # - deploy-frontend:
       #     requires:
       #       - prepare-frontend
-      - smoke-test-backend
+      # - smoke-test-backend:
           # requires:
           #   - run-migrations
-      # - smoke-test-frontend:
-      #     requires:
+      - smoke-test-frontend:
+          requires:
+            - create-infrastructure-frontend
       #       - deploy-frontend
       #       - run-migrations
