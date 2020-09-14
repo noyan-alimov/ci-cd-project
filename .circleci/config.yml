@@ -67,7 +67,6 @@ jobs:
           command: |
             cd frontend
             npm run build
-      - run: apk add curl
       - slack/notify-on-failure
 
   build-backend:
