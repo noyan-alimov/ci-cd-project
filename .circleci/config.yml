@@ -17,7 +17,7 @@ commands:
   install-tools-on-alpine:
     steps:
       - run: apk add --update curl
-      # - run: apk add aws-cli
+      - run: apk add aws-cli
       # - run: apt install curl -y
       # - run: apt install unzip -y
       # - run: apt-get update && apt-get install -yy less
