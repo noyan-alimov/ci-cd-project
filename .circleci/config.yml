@@ -17,7 +17,7 @@ commands:
   install-tools-on-alpine:
     steps:
       - run: apk add --update curl
-      - run: apk add aws-cli
+      # - run: apk add aws-cli
       # - run: apt install curl -y
       # - run: apt install unzip -y
       # - run: apt-get update && apt-get install -yy less
@@ -330,15 +330,15 @@ jobs:
       - image: alpine:latest
     steps:
       - install-tools-on-alpine
-      - run: 
-          name: smoke test backend
-          command: |
-            BACKEND_URL=$(aws ec2 describe-instances \
-              --filters "Name=tag:Name,Values=backend-backend-deployment-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --query 'Reservations[*].Instances[*].PublicDnsName' \
-              --output text)
-            curl "http://${BACKEND_URL}:3030/api/status"
-      - destroy-environment
+      # - run: 
+      #     name: smoke test backend
+      #     command: |
+      #       BACKEND_URL=$(aws ec2 describe-instances \
+      #         --filters "Name=tag:Name,Values=backend-backend-deployment-${CIRCLE_WORKFLOW_ID:0:7}" \
+      #         --query 'Reservations[*].Instances[*].PublicDnsName' \
+      #         --output text)
+      #       curl "http://${BACKEND_URL}:3030/api/status"
+      # - destroy-environment
       - revert-migrations
 
   smoke-test-frontend:
@@ -346,17 +346,17 @@ jobs:
       - image: alpine:latest
     steps:
       - install-tools-on-alpine
-      # - run:
-      #     name: smoke test frontend
-      #     command: |
-      #       URL="http://udapeople-frontend-deployment-abd1603.s3-website-eu-west-2.amazonaws.com/#/employees"              
-      #       if curl -s ${URL} | grep "Welcome"
-      #       then
-      #         return 1
-      #       else
-      #         return 0
-      #       fi
-      # - destroy-environment
+      - run:
+          name: smoke test frontend
+          command: |
+            URL="http://udapeople-frontend-deployment-abd1603.s3-website-eu-west-2.amazonaws.com/#/employees"              
+            if curl -s ${URL} | grep "Welcome"
+            then
+              return 1
+            else
+              return 0
+            fi
+      - destroy-environment
       - revert-migrations
 
 #  cloudfront-update:
@@ -370,10 +370,10 @@ workflows:
       # # - test-backend
       # # - scan-frontend
       # - scan-backend
-      # - create-infrastructure-backend
-      #     requires:
+      - create-infrastructure-backend
+          # requires:
       #       - build-frontend
-      #       - build-backend
+            # - build-backend
       #       # - test-frontend
       #       # - test-backend
       #       # - scan-frontend
@@ -386,9 +386,9 @@ workflows:
       #       # - test-backend
       #       # - scan-frontend
       #       - scan-backend
-      # - configure-infrastructure-and-deploy-backend:
-      #     requires:
-      #       - create-infrastructure-backend
+      - configure-infrastructure-and-deploy-backend:
+          requires:
+            - create-infrastructure-backend
       # - run-migrations:
       #     requires:
       #       - create-infrastructure-backend
@@ -399,11 +399,11 @@ workflows:
       # - deploy-frontend:
       #     requires:
       #       - prepare-frontend
-      # - smoke-test-backend:
-          # requires:
-            # - create-infrastructure-backend
+      - smoke-test-backend:
+          requires:
+            - configure-infrastructure-and-deploy-backend
             # - run-migrations
-      - smoke-test-frontend
+      # - smoke-test-frontend:
       #     requires:
       #       - deploy-frontend
       #       - run-migrations
