@@ -316,7 +316,12 @@ jobs:
     docker:
       - image: alpine:latest
     steps:
-      - run: ls
+      - run:
+          name: test
+          command: |
+            cd backend
+            npm run format
+
       # - install-tools-on-alpine
       # - run: 
       #     name: smoke test backend
