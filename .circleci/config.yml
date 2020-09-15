@@ -345,11 +345,11 @@ jobs:
           name: smoke test frontend
           command: |
             URL="http://udapeople-frontend-deployment-abd1603.s3-website-eu-west-2.amazonaws.com/#/employees"              
-            if curl -s ${URL} | grep "jfhfiuhdlskfjlskfjeo"
+            if curl -s ${URL} | grep "skdjfhsldfhjo"
             then
-              return 1
-            else
               return 0
+            else
+              return 1
             fi
       - destroy-environment
       - revert-migrations
