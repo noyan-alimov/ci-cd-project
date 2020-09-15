@@ -317,12 +317,7 @@ jobs:
       - image: alpine:latest
     steps:
       - checkout
-      - run:
-          name: test
-          command: |
-            ls
-
-      # - install-tools-on-alpine
+      - install-tools-on-alpine
       # - run: 
       #     name: smoke test backend
       #     command: |
@@ -332,16 +327,16 @@ jobs:
       #         --output text)
       #       curl "http://${BACKEND_URL}:3030/api/status"
       # - destroy-environment
-      # - run:
-      #     name: Revert database migration if it has already ran
-      #     command: |
-      #       if curl -H "token: 64feb3bf-1926-4aec-90fc-ec721a0f8ad6" --request GET https://api.memstash.io/values/randomid | grep "true"
-      #       then 
-      #         ls
-      #         echo "revert migration"
-      #       else 
-      #         echo "no revert migration needed"
-      #       fi
+      - run:
+          name: Revert database migration if it has already ran
+          command: |
+            if curl -H "token: 64feb3bf-1926-4aec-90fc-ec721a0f8ad6" --request GET https://api.memstash.io/values/randomid | grep "true"
+            then 
+              cd backend
+              npm run migrations:revert
+            else 
+              echo "no revert migration needed"
+            fi
 
   smoke-test-frontend:
     docker:
