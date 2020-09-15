@@ -17,16 +17,7 @@ commands:
   install-tools-on-alpine:
     steps:
       - run: apk add --update curl
-      # - run: apk add aws-cli
-      # - run: apt install curl -y
-      # - run: apt install unzip -y
-      # - run: apt-get update && apt-get install -yy less
-      # - run:
-      #     name: install aws cli
-      #     command: |
-      #       curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-      #       unzip awscliv2.zip
-      #       ./aws/install
+      - run: apk add aws-cli
 
   destroy-environment:
     steps:
@@ -35,11 +26,24 @@ commands:
           command: |
             aws cloudformation delete-stack --stack-name backend-${CIRCLE_WORKFLOW_ID:0:7}
           when: on_fail
-      # - run:
-      #     name: Destroy frontend
-      #     command: |
-      #       aws cloudformation delete-stack --stack-name frontend-${CIRCLE_WORKFLOW_ID:0:7}
-      #     when: on_fail
+      - run:
+          name: Destroy frontend
+          command: |
+            aws cloudformation delete-stack --stack-name frontend-${CIRCLE_WORKFLOW_ID:0:7}
+          when: on_fail
+
+  revert-migrations:
+    steps:
+      - run:
+          name: Revert database migration if it has already ran
+          command: |
+            if curl -H "token: 64feb3bf-1926-4aec-90fc-ec721a0f8ad6" --request GET https://api.memstash.io/values/${CIRCLE_WORKFLOW_ID:0:7} | grep "true"
+            then 
+              cd backend
+              npm run migrations:revert
+            else 
+              echo "no revert migration needed"
+            fi
 
 
 orbs:
@@ -139,7 +143,7 @@ jobs:
           name: Analyze frontend
           command: |
             cd frontend
-            npm audit --audit-level=critical
+            npm audit fix --audit-level=critical --force
       - slack/notify-on-failure
 
   scan-backend:
@@ -319,30 +323,22 @@ jobs:
       - checkout
       - install-tools-on-alpine
       - run: apk add --update nodejs npm
-      # - run: 
-      #     name: smoke test backend
-      #     command: |
-      #       BACKEND_URL=$(aws ec2 describe-instances \
-      #         --filters "Name=tag:Name,Values=backend-backend-deployment-${CIRCLE_WORKFLOW_ID:0:7}" \
-      #         --query 'Reservations[*].Instances[*].PublicDnsName' \
-      #         --output text)
-      #       curl "http://${BACKEND_URL}:3030/api/status"
-      # - destroy-environment
-      - run:
-          name: Revert database migration if it has already ran
+      - run: 
+          name: smoke test backend
           command: |
-            if curl -H "token: 64feb3bf-1926-4aec-90fc-ec721a0f8ad6" --request GET https://api.memstash.io/values/randomid | grep "true"
-            then 
-              cd backend
-              npm run migrations:revert
-            else 
-              echo "no revert migration needed"
-            fi
+            BACKEND_URL=$(aws ec2 describe-instances \
+              --filters "Name=tag:Name,Values=backend-backend-deployment-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --query 'Reservations[*].Instances[*].PublicDnsName' \
+              --output text)
+            curl "http://${BACKEND_URL}:3030/api/status"
+      - destroy-environment
+      - revert-migrations
 
   smoke-test-frontend:
     docker:
       - image: alpine:latest
     steps:
+      - checkout
       - install-tools-on-alpine
       - run:
           name: smoke test frontend
@@ -363,46 +359,44 @@ jobs:
 workflows:
   default:
     jobs:
-      # - build-frontend
-      # - build-backend
-      # # - test-frontend
-      # # - test-backend
-      # # - scan-frontend
-      # - scan-backend
-      # - create-infrastructure-backend:
-      #     requires:
-            # - build-frontend
-            # - build-backend
-      #       # - test-frontend
-      #       # - test-backend
-      #       # - scan-frontend
-      #       - scan-backend
-      # - create-infrastructure-frontend:
-      #     requires:
-      #       - build-frontend
-      #       - build-backend
-      #       # - test-frontend
-      #       # - test-backend
-      #       # - scan-frontend
-      #       - scan-backend
-      # - configure-infrastructure-and-deploy-backend:
-      #     requires:
-      #       - create-infrastructure-backend
-      # - run-migrations:
-      #     requires:
-      #       - create-infrastructure-backend
-      #       - configure-infrastructure-and-deploy-backend
-      # - prepare-frontend:
-      #     requires:
-      #       - create-infrastructure-frontend
-      # - deploy-frontend:
-      #     requires:
-      #       - prepare-frontend
-      - smoke-test-backend
-          # requires:
-          #   - configure-infrastructure-and-deploy-backend
-            # - run-migrations
-      # - smoke-test-frontend:
-      #     requires:
-      #       - deploy-frontend
-      #       - run-migrations
+      - build-frontend
+      - build-backend
+      # - test-frontend
+      # - test-backend
+      # - scan-frontend
+      - scan-backend
+      - create-infrastructure-backend:
+          requires:
+            - build-frontend
+            - build-backend
+            # - test-frontend
+            # - test-backend
+            # - scan-frontend
+            - scan-backend
+      - create-infrastructure-frontend:
+          requires:
+            - build-frontend
+            - build-backend
+            # - test-frontend
+            # - test-backend
+            # - scan-frontend
+            - scan-backend
+      - configure-infrastructure-and-deploy-backend:
+          requires:
+            - create-infrastructure-backend
+      - run-migrations:
+          requires:
+            - configure-infrastructure-and-deploy-backend
+      - prepare-frontend:
+          requires:
+            - create-infrastructure-frontend
+      - deploy-frontend:
+          requires:
+            - prepare-frontend
+      - smoke-test-backend:
+          requires:
+            - run-migrations
+      - smoke-test-frontend:
+          requires:
+            - deploy-frontend
+            - run-migrations
