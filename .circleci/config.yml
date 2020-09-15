@@ -182,13 +182,12 @@ jobs:
             aws cloudformation deploy \
               --template-file backend.yml \
               --stack-name "backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --parameter-overrides ID="backend-deployment-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --tags project=udacity
+              --parameter-overrides ID="backend-deployment-${CIRCLE_WORKFLOW_ID:0:7}"
       - run:
           name: Save backend instance public url
           command: |
             mkdir /tmp/workspace
-            aws ec2 describe-instances --filters "Name=tag:project,Values=udacity" \
+            aws ec2 describe-instances --filters "Name=tag:Name,Values=backend-backend-deployment-${CIRCLE_WORKFLOW_ID:0:7}" \
               --query "Reservations[*].Instances[*].[PublicDnsName]" \
               --output text > /tmp/workspace/backend_url.txt
       - persist_to_workspace:
