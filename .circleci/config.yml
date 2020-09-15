@@ -36,8 +36,11 @@ commands:
 
   revert-migrations:
     steps:
-      - install-dependencies:
-          layer: "backend"
+      - run:
+          name: install backend dependencies
+          command: |
+            cd backend
+            npm i
           when: on_fail
       - run:
           name: Revert database migration if it has already ran
