@@ -316,7 +316,8 @@ jobs:
     docker:
       - image: alpine:latest
     steps:
-      - install-tools-on-alpine
+      - run: ls
+      # - install-tools-on-alpine
       # - run: 
       #     name: smoke test backend
       #     command: |
@@ -326,16 +327,16 @@ jobs:
       #         --output text)
       #       curl "http://${BACKEND_URL}:3030/api/status"
       # - destroy-environment
-      - run:
-          name: Revert database migration if it has already ran
-          command: |
-            if curl -H "token: 64feb3bf-1926-4aec-90fc-ec721a0f8ad6" --request GET https://api.memstash.io/values/randomid | grep "true"
-            then 
-              ls
-              echo "revert migration"
-            else 
-              echo "no revert migration needed"
-            fi
+      # - run:
+      #     name: Revert database migration if it has already ran
+      #     command: |
+      #       if curl -H "token: 64feb3bf-1926-4aec-90fc-ec721a0f8ad6" --request GET https://api.memstash.io/values/randomid | grep "true"
+      #       then 
+      #         ls
+      #         echo "revert migration"
+      #       else 
+      #         echo "no revert migration needed"
+      #       fi
 
   smoke-test-frontend:
     docker:
@@ -362,15 +363,15 @@ workflows:
   default:
     jobs:
       # - build-frontend
-      - build-backend
+      # - build-backend
       # # - test-frontend
       # # - test-backend
       # # - scan-frontend
       # - scan-backend
-      - create-infrastructure-backend:
-          requires:
+      # - create-infrastructure-backend:
+      #     requires:
             # - build-frontend
-            - build-backend
+            # - build-backend
       #       # - test-frontend
       #       # - test-backend
       #       # - scan-frontend
@@ -383,9 +384,9 @@ workflows:
       #       # - test-backend
       #       # - scan-frontend
       #       - scan-backend
-      - configure-infrastructure-and-deploy-backend:
-          requires:
-            - create-infrastructure-backend
+      # - configure-infrastructure-and-deploy-backend:
+      #     requires:
+      #       - create-infrastructure-backend
       # - run-migrations:
       #     requires:
       #       - create-infrastructure-backend
@@ -396,9 +397,9 @@ workflows:
       # - deploy-frontend:
       #     requires:
       #       - prepare-frontend
-      - smoke-test-backend:
-          requires:
-            - configure-infrastructure-and-deploy-backend
+      - smoke-test-backend
+          # requires:
+          #   - configure-infrastructure-and-deploy-backend
             # - run-migrations
       # - smoke-test-frontend:
       #     requires:
