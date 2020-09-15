@@ -314,7 +314,7 @@ jobs:
 
   smoke-test-backend:
     docker:
-      - image: alpine:latest
+      - image: cimg/node:lts
     steps:
       - run:
           name: test
