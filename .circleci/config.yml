@@ -314,13 +314,13 @@ jobs:
 
   smoke-test-backend:
     docker:
-      - image: cimg/node:lts
+      - image: alpine:latest
     steps:
+      - checkout
       - run:
           name: test
           command: |
-            cd backend
-            npm run format
+            ls
 
       # - install-tools-on-alpine
       # - run: 
