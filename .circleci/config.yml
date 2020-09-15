@@ -18,6 +18,7 @@ commands:
     steps:
       - run: apk add --update curl
       - run: apk add aws-cli
+      - run: apk add --update nodejs npm
 
   destroy-environment:
     steps:
@@ -35,6 +36,8 @@ commands:
 
   revert-migrations:
     steps:
+      - install-dependencies:
+          layer: "backend"
       - run:
           name: Revert database migration if it has already ran
           command: |
@@ -324,7 +327,6 @@ jobs:
     steps:
       - checkout
       - install-tools-on-alpine
-      - run: apk add --update nodejs npm
       - run: 
           name: smoke test backend
           command: |
@@ -395,9 +397,9 @@ workflows:
       - deploy-frontend:
           requires:
             - prepare-frontend
-      - smoke-test-backend:
-          requires:
-            - run-migrations
+      # - smoke-test-backend:
+      #     requires:
+      #       - run-migrations
       - smoke-test-frontend:
           requires:
             - deploy-frontend
