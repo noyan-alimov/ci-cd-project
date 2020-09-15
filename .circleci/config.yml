@@ -22,11 +22,11 @@ commands:
 
   destroy-environment:
     steps:
-      # - run:
-      #     name: Destroy backend
-      #     command: |
-      #       aws cloudformation delete-stack --stack-name backend-${CIRCLE_WORKFLOW_ID:0:7}
-      #     when: on_fail
+      - run:
+          name: Destroy backend
+          command: |
+            aws cloudformation delete-stack --stack-name backend-${CIRCLE_WORKFLOW_ID:0:7}
+          when: on_fail
       - run:
           name: Destroy frontend
           command: |
@@ -36,8 +36,11 @@ commands:
 
   revert-migrations:
     steps:
-      - install-dependencies:
-          layer: "backend"
+      - run:
+          name: install backend dependencies
+          command: |
+            cd backend
+            npm i
       - run:
           name: Revert database migration if it has already ran
           command: |
@@ -364,33 +367,33 @@ workflows:
   default:
     jobs:
       - build-frontend
-      # - build-backend
+      - build-backend
       # - test-frontend
       # - test-backend
       # - scan-frontend
-      # - scan-backend
-      # - create-infrastructure-backend:
-          # requires:
-            # - build-frontend
-            # - build-backend
+      - scan-backend
+      - create-infrastructure-backend:
+          requires:
+            - build-frontend
+            - build-backend
             # - test-frontend
             # - test-backend
             # - scan-frontend
-            # - scan-backend
+            - scan-backend
       - create-infrastructure-frontend:
           requires:
             - build-frontend
-            # - build-backend
+            - build-backend
             # - test-frontend
             # - test-backend
             # - scan-frontend
-            # - scan-backend
-      # - configure-infrastructure-and-deploy-backend:
-          # requires:
-            # - create-infrastructure-backend
-      # - run-migrations:
-          # requires:
-            # - configure-infrastructure-and-deploy-backend
+            - scan-backend
+      - configure-infrastructure-and-deploy-backend:
+          requires:
+            - create-infrastructure-backend
+      - run-migrations:
+          requires:
+            - configure-infrastructure-and-deploy-backend
       - prepare-frontend:
           requires:
             - create-infrastructure-frontend
@@ -403,4 +406,4 @@ workflows:
       - smoke-test-frontend:
           requires:
             - deploy-frontend
-            # - run-migrations
+            - run-migrations
