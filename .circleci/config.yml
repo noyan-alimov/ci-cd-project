@@ -418,36 +418,12 @@ jobs:
 workflows:
   default:
     jobs:
-      - build-frontend:
-          filters:
-            branches:
-              only:
-                - not-prod
-      - build-backend:
-          filters:
-            branches:
-              only:
-                - not-prod
-      - test-frontend:
-          filters:
-            branches:
-              only:
-                - not-prod
-      - test-backend:
-          filters:
-            branches:
-              only:
-                - not-prod
-      - scan-frontend:
-          filters:
-            branches:
-              only:
-                - not-prod
-      - scan-backend:
-          filters:
-            branches:
-              only:
-                - not-prod
+      - build-frontend
+      - build-backend
+      - test-frontend
+      - test-backend
+      - scan-frontend
+      - scan-backend
       - create-infrastructure-backend:
           requires:
             - build-frontend
@@ -456,6 +432,10 @@ workflows:
             - test-backend
             - scan-frontend
             - scan-backend
+          filters:
+            branches:
+              only:
+                - master
       - create-infrastructure-frontend:
           requires:
             - build-frontend
@@ -464,6 +444,10 @@ workflows:
             - test-backend
             - scan-frontend
             - scan-backend
+          filters:
+            branches:
+              only:
+                - master
       - configure-infrastructure-and-deploy-backend:
           requires:
             - create-infrastructure-backend
