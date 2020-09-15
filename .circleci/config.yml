@@ -318,6 +318,7 @@ jobs:
     steps:
       - checkout
       - install-tools-on-alpine
+      - run: apk add --update nodejs npm
       # - run: 
       #     name: smoke test backend
       #     command: |
