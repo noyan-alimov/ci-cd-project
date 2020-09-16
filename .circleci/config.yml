@@ -373,6 +373,7 @@ jobs:
                 --template-file .circleci/files/cloudfront.yml \
                 --stack-name udapeople-cloudfront \
                 --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}"
+          no_output_timeout: 20m
 
   get-last-deployment-id:
     docker:
