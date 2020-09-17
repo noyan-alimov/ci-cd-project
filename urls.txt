@@ -1,5 +1,5 @@
 01: https://github.com/noyan-alimov/ci-cd-project
-02: https://udapeople-frontend-deployment-bbe34b5.s3.eu-west-2.amazonaws.com/index.html
-03: https://udapeople-frontend-deployment-49113b3.s3.eu-west-2.amazonaws.com/index.html
-04: http://ec2-18-132-190-109.eu-west-2.compute.amazonaws.com:3030/api/status
-05: http://ec2-18-133-142-29.eu-west-2.compute.amazonaws.com:9090/targets
+02: https://udapeople-frontend-deployment-b56f1cd.s3.eu-west-2.amazonaws.com/index.html
+03: d2nebkv61mdrlo.cloudfront.net
+04: ec2-3-10-164-151.eu-west-2.compute.amazonaws.com:3030/api/status
+05: ec2-18-133-124-249.eu-west-2.compute.amazonaws.com:9090

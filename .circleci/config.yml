@@ -423,17 +423,17 @@ workflows:
     jobs:
       - build-frontend
       - build-backend
-      # - test-frontend
-      # - test-backend
-      # - scan-frontend
+      - test-frontend
+      - test-backend
+      - scan-frontend
       - scan-backend
       - create-infrastructure-backend:
           requires:
             - build-frontend
             - build-backend
-            # - test-frontend
-            # - test-backend
-            # - scan-frontend
+            - test-frontend
+            - test-backend
+            - scan-frontend
             - scan-backend
           filters:
             branches:
@@ -443,9 +443,9 @@ workflows:
           requires:
             - build-frontend
             - build-backend
-            # - test-frontend
-            # - test-backend
-            # - scan-frontend
+            - test-frontend
+            - test-backend
+            - scan-frontend
             - scan-backend
           filters:
             branches:
