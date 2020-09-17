@@ -418,61 +418,61 @@ jobs:
 workflows:
   default:
     jobs:
-      - build-frontend
-      - build-backend
-      - test-frontend
-      - test-backend
-      - scan-frontend
-      - scan-backend
+      # - build-frontend
+      # - build-backend
+      # - test-frontend
+      # - test-backend
+      # - scan-frontend
+      # - scan-backend
       - create-infrastructure-backend:
-          requires:
-            - build-frontend
-            - build-backend
-            - test-frontend
-            - test-backend
-            - scan-frontend
-            - scan-backend
+          # requires:
+          #   - build-frontend
+          #   - build-backend
+          #   - test-frontend
+          #   - test-backend
+          #   - scan-frontend
+          #   - scan-backend
           filters:
             branches:
               only:
                 - master
       - create-infrastructure-frontend:
-          requires:
-            - build-frontend
-            - build-backend
-            - test-frontend
-            - test-backend
-            - scan-frontend
-            - scan-backend
+          # requires:
+          #   - build-frontend
+          #   - build-backend
+          #   - test-frontend
+          #   - test-backend
+          #   - scan-frontend
+          #   - scan-backend
           filters:
             branches:
               only:
                 - master
-      - configure-infrastructure-and-deploy-backend:
-          requires:
-            - create-infrastructure-backend
-      - run-migrations:
-          requires:
-            - configure-infrastructure-and-deploy-backend
-      - prepare-frontend:
-          requires:
-            - create-infrastructure-frontend
-      - deploy-frontend:
-          requires:
-            - prepare-frontend
-      - smoke-test-backend:
-          requires:
-            - run-migrations
-      - smoke-test-frontend:
-          requires:
-            - deploy-frontend
-            - smoke-test-backend
-      - cloudfront-update:
-          requires:
-            - smoke-test-frontend
-      - get-last-deployment-id:
-          requires:
-            - cloudfront-update
-      - cleanup-old-resources:
-          requires:
-            - get-last-deployment-id
+      # - configure-infrastructure-and-deploy-backend:
+      #     requires:
+      #       - create-infrastructure-backend
+      # - run-migrations:
+      #     requires:
+      #       - configure-infrastructure-and-deploy-backend
+      # - prepare-frontend:
+      #     requires:
+      #       - create-infrastructure-frontend
+      # - deploy-frontend:
+      #     requires:
+      #       - prepare-frontend
+      # - smoke-test-backend:
+      #     requires:
+      #       - run-migrations
+      # - smoke-test-frontend:
+      #     requires:
+      #       - deploy-frontend
+      #       - smoke-test-backend
+      # - cloudfront-update:
+      #     requires:
+      #       - smoke-test-frontend
+      # - get-last-deployment-id:
+      #     requires:
+      #       - cloudfront-update
+      # - cleanup-old-resources:
+      #     requires:
+      #       - get-last-deployment-id
