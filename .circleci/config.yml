@@ -470,14 +470,14 @@ workflows:
       #     requires:
       #       - deploy-frontend
       #       - smoke-test-backend
-      # - get-last-deployment-id:
-      #     requires:
-      #       - smoke-test-frontend
-      - cloudfront-update:
+      - get-last-deployment-id:
           requires:
             - create-infrastructure-frontend
             - create-infrastructure-backend
-            # - get-last-deployment-id
-      # - cleanup-old-resources:
-      #     requires:
-      #       - get-last-deployment-id
+            # - smoke-test-frontend
+      - cloudfront-update:
+          requires:
+            - get-last-deployment-id
+      - cleanup-old-resources:
+          requires:
+            - cloudfront-update
