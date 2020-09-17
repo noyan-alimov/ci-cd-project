@@ -257,9 +257,6 @@ jobs:
           root: /tmp/workspace
           paths:
             - backend_url.txt
-      - run: apk add aws-cli
-          when: on_fail
-      - destroy-environment
           
   run-migrations:
     docker:
