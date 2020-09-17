@@ -422,61 +422,62 @@ jobs:
 workflows:
   default:
     jobs:
-      # - build-frontend
-      # - build-backend
-      # # - test-frontend
-      # # - test-backend
-      # # - scan-frontend
-      # - scan-backend
-      - create-infrastructure-backend
-      #     requires:
-      #       - build-frontend
-      #       - build-backend
-      #       # - test-frontend
-      #       # - test-backend
-      #       # - scan-frontend
-      #       - scan-backend
-      #     filters:
-      #       branches:
-      #         only:
-      #           - master
-      # - create-infrastructure-frontend:
-      #     requires:
-      #       - build-frontend
-      #       - build-backend
-      #       # - test-frontend
-      #       # - test-backend
-      #       # - scan-frontend
-      #       - scan-backend
-      #     filters:
-      #       branches:
-      #         only:
-      #           - master
-      # - configure-infrastructure-and-deploy-backend:
-      #     requires:
-      #       - create-infrastructure-backend
-      # - run-migrations:
-      #     requires:
-      #       - configure-infrastructure-and-deploy-backend
-      - prepare-frontend:
+      - build-frontend
+      - build-backend
+      # - test-frontend
+      # - test-backend
+      # - scan-frontend
+      - scan-backend
+      - create-infrastructure-backend:
+          requires:
+            - build-frontend
+            - build-backend
+            # - test-frontend
+            # - test-backend
+            # - scan-frontend
+            - scan-backend
+          filters:
+            branches:
+              only:
+                - master
+      - create-infrastructure-frontend:
+          requires:
+            - build-frontend
+            - build-backend
+            # - test-frontend
+            # - test-backend
+            # - scan-frontend
+            - scan-backend
+          filters:
+            branches:
+              only:
+                - master
+      - configure-infrastructure-and-deploy-backend:
           requires:
             - create-infrastructure-backend
-      # - deploy-frontend:
-      #     requires:
-      #       - prepare-frontend
-      # - smoke-test-backend:
-      #     requires:
-      #       - run-migrations
-      # - smoke-test-frontend:
-      #     requires:
-      #       - deploy-frontend
-      #       - smoke-test-backend
-      # - get-last-deployment-id:
-      #     requires:
-      #       - smoke-test-frontend
-      # - cloudfront-update:
-      #     requires:
-      #       - get-last-deployment-id
-      # - cleanup-old-resources:
-      #     requires:
-      #       - cloudfront-update
+      - run-migrations:
+          requires:
+            - configure-infrastructure-and-deploy-backend
+      - prepare-frontend:
+          requires:
+            - create-infrastructure-frontend
+            - create-infrastructure-backend
+      - deploy-frontend:
+          requires:
+            - prepare-frontend
+      - smoke-test-backend:
+          requires:
+            - run-migrations
+      - smoke-test-frontend:
+          requires:
+            - deploy-frontend
+            - smoke-test-backend
+      - get-last-deployment-id:
+          requires:
+            - smoke-test-frontend
+      - cloudfront-update:
+          requires:
+            - get-last-deployment-id
+      - cleanup-old-resources:
+          requires:
+            - cloudfront-update
