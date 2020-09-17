@@ -257,6 +257,7 @@ jobs:
           root: /tmp/workspace
           paths:
             - backend_url.txt
+      - destroy-environment
             
   run-migrations:
     docker:
@@ -360,6 +361,26 @@ jobs:
       - destroy-environment
       - revert-migrations
 
+  get-last-deployment-id:
+    docker:
+      - image: alpine:latest
+    steps:
+      - checkout
+      - run: apk add aws-cli
+      - run: apk add tar
+      - run:
+          name: Query and save last deployment id
+          command: |
+            mkdir /tmp/workspace
+            ID=$(aws cloudformation \
+                list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+                --no-paginate --output text)
+            echo ${ID} > /tmp/workspace/last_deployment_id.txt
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - last_deployment_id.txt
+
   cloudfront-update:
     executor: aws-cli/default
     steps:
@@ -374,26 +395,8 @@ jobs:
                 --stack-name udapeople-cloudfront \
                 --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}"
           no_output_timeout: 20m
-
-  get-last-deployment-id:
-    docker:
-      - image: alpine:latest
-    steps:
-      - checkout
-      - run: apk add aws-cli
-      - run: apk add tar
-      - run:
-          name: Query and save last deployment id
-          command: |
-            mkdir /tmp/workspace
-            ID=$(aws cloudformation \
-                list-exports --query "Exports[?Name==\`PipelineID\`].Value" \
-                --no-paginate --output text)
-            echo ${ID} > /tmp/workspace/last_deployment_id.txt
-      - persist_to_workspace:
-          root: /tmp/workspace
-          paths:
-            - last_deployment_id.txt
+      - destroy-environment
+      - revert-migrations
 
   cleanup-old-resources:
     docker:
@@ -467,12 +470,14 @@ workflows:
       #     requires:
       #       - deploy-frontend
       #       - smoke-test-backend
-      # - cloudfront-update:
-      #     requires:
-      #       - smoke-test-frontend
       # - get-last-deployment-id:
       #     requires:
-      #       - cloudfront-update
+      #       - smoke-test-frontend
+      - cloudfront-update:
+          requires:
+            - create-infrastructure-frontend
+            - create-infrastructure-backend
+            # - get-last-deployment-id
       # - cleanup-old-resources:
       #     requires:
       #       - get-last-deployment-id
