@@ -289,7 +289,9 @@ jobs:
       - run:
           name: Build Frontend
           command: |
-            export API_URL=http://`cat /tmp/workspace/backend_url.txt`:3030
+            BACKEND_URL=$(cat /tmp/workspace/backend_url.txt)
+            echo BACKEND_URL: ${BACKEND_URL}
+            export API_URL=http://${BACKEND_URL}:3030
             cd frontend            
             npm run build
       - run:
