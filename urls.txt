@@ -1,5 +1,6 @@
 01: https://github.com/noyan-alimov/ci-cd-project
-02: https://udapeople-frontend-deployment-b56f1cd.s3.eu-west-2.amazonaws.com/index.html
-03: d2nebkv61mdrlo.cloudfront.net
-04: ec2-3-10-164-151.eu-west-2.compute.amazonaws.com:3030/api/status
-05: ec2-18-133-124-249.eu-west-2.compute.amazonaws.com:9090
+02: https://app.circleci.com/pipelines/github/noyan-alimov/ci-cd-project
+03: https://github.com/noyan-alimov/ci-cd-project/blob/master/.circleci/ansible/roles/configure-server/tasks/main.yml
+04: d2nebkv61mdrlo.cloudfront.net
+05: ec2-3-10-164-151.eu-west-2.compute.amazonaws.com:3030/api/status
+06: ec2-35-177-202-10.eu-west-2.compute.amazonaws.com:9090
